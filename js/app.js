@@ -94,11 +94,23 @@ function handleInvestmentClick(investment) {
     
     // 添加主按钮点击事件
     tg.MainButton.onClick(() => {
-        // 这里可以处理确认投资的逻辑
-        tg.sendData(JSON.stringify({
+        // 发送数据到 Telegram Bot
+        const data = {
             action: 'invest',
-            investment: investment
-        }));
+            investment: investment,
+            user: {
+                id: tg.initDataUnsafe.user.id,
+                username: tg.initDataUnsafe.user.username,
+                first_name: tg.initDataUnsafe.user.first_name
+            },
+            timestamp: new Date().toISOString()
+        };
+        
+        // 发送数据给 Bot
+        tg.sendData(JSON.stringify(data));
+        
+        // 显示确认消息
+        tg.showAlert('投资申请已提交，请等待审核');
     });
 }
 
