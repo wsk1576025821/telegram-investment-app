@@ -115,7 +115,7 @@ function handleInvestmentClick(investment) {
             console.log('Preparing to send data:', data);
             
             // 发送数据给 Bot
-            tg.WebApp.sendData(JSON.stringify(data));
+            tg.sendData(JSON.stringify(data));
             console.log('Data sent successfully');
             
             // 隐藏按钮
