@@ -64,12 +64,12 @@ function renderInvestments() {
             item.addEventListener('touchend', (e) => {
                 const touchDuration = Date.now() - touchStartTime;
                 if (touchDuration < 200) { // 仅响应快速点击
-                    showInvestmentPopup(investment);
+                    handleInvestmentClick(investment);
                 }
             });
         } else {
             item.addEventListener('click', () => {
-                showInvestmentPopup(investment);
+                handleInvestmentClick(investment);
             });
         }
         
@@ -77,20 +77,31 @@ function renderInvestments() {
     });
 }
 
-// 显示投资确认弹窗
-function showInvestmentPopup(investment) {
-    tg.showPopup({
-        title: investment.title,
-        message: `确认投资该项目？\n收益率: ${investment.returnRate}\n期限: ${investment.period}\n最低投资: ${investment.minAmount}元`,
-        buttons: [{
-            type: 'ok',
-            text: '确认投资'
-        }, {
-            type: 'cancel',
-            text: '取消'
-        }]
+// 处理投资点击事件
+function handleInvestmentClick(investment) {
+    // 使用 MainButton 替代 showPopup
+    tg.MainButton.setText('确认投资');
+    tg.MainButton.show();
+    
+    // 存储当前选中的投资项目
+    window.selectedInvestment = investment;
+    
+    // 添加主按钮点击事件
+    tg.MainButton.onClick(() => {
+        // 这里可以处理确认投资的逻辑
+        tg.sendData(JSON.stringify({
+            action: 'invest',
+            investment: investment
+        }));
     });
 }
 
 // 初始化页面
-renderInvestments(); 
+renderInvestments();
+
+// 清理函数
+window.addEventListener('unload', () => {
+    if (tg.MainButton.isVisible) {
+        tg.MainButton.hide();
+    }
+}); 
