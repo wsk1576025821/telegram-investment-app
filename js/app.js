@@ -10,6 +10,9 @@ tg.expand();
 document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
 document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
 
+// 检测设备类型
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 // 模拟数据
 const mockData = {
     onlineCount: 119,
@@ -51,21 +54,41 @@ function renderInvestments() {
             </div>
         `;
         
-        item.addEventListener('click', () => {
-            tg.showPopup({
-                title: investment.title,
-                message: `确认投资该项目？\n收益率: ${investment.returnRate}\n期限: ${investment.period}`,
-                buttons: [{
-                    type: 'ok',
-                    text: '确认投资'
-                }, {
-                    type: 'cancel',
-                    text: '取消'
-                }]
+        // 针对移动端优化点击事件
+        if (isMobile) {
+            let touchStartTime;
+            item.addEventListener('touchstart', () => {
+                touchStartTime = Date.now();
             });
-        });
+            
+            item.addEventListener('touchend', (e) => {
+                const touchDuration = Date.now() - touchStartTime;
+                if (touchDuration < 200) { // 仅响应快速点击
+                    showInvestmentPopup(investment);
+                }
+            });
+        } else {
+            item.addEventListener('click', () => {
+                showInvestmentPopup(investment);
+            });
+        }
         
         investmentList.appendChild(item);
+    });
+}
+
+// 显示投资确认弹窗
+function showInvestmentPopup(investment) {
+    tg.showPopup({
+        title: investment.title,
+        message: `确认投资该项目？\n收益率: ${investment.returnRate}\n期限: ${investment.period}\n最低投资: ${investment.minAmount}元`,
+        buttons: [{
+            type: 'ok',
+            text: '确认投资'
+        }, {
+            type: 'cancel',
+            text: '取消'
+        }]
     });
 }
 
