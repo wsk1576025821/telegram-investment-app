@@ -85,6 +85,8 @@ function renderInvestments() {
 
 // 处理投资点击事件
 function handleInvestmentClick(investment) {
+    console.log('Investment clicked:', investment);
+    
     // 使用 MainButton 替代 showPopup
     tg.MainButton.setText('确认投资');
     tg.MainButton.show();
@@ -94,23 +96,37 @@ function handleInvestmentClick(investment) {
     
     // 添加主按钮点击事件
     tg.MainButton.onClick(() => {
-        // 发送数据到 Telegram Bot
-        const data = {
-            action: 'invest',
-            investment: investment,
-            user: {
-                id: tg.initDataUnsafe.user.id,
-                username: tg.initDataUnsafe.user.username,
-                first_name: tg.initDataUnsafe.user.first_name
-            },
-            timestamp: new Date().toISOString()
-        };
-        
-        // 发送数据给 Bot
-        tg.sendData(JSON.stringify(data));
-        
-        // 显示确认消息
-        tg.showAlert('投资申请已提交，请等待审核');
+        try {
+            console.log('Main button clicked');
+            console.log('InitDataUnsafe:', tg.initDataUnsafe);
+            
+            // 准备发送的数据
+            const data = {
+                action: 'invest',
+                investment: investment,
+                user: {
+                    id: tg.initDataUnsafe?.user?.id || String(Date.now()),
+                    username: tg.initDataUnsafe?.user?.username || 'unknown',
+                    first_name: tg.initDataUnsafe?.user?.first_name || 'unknown'
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('Preparing to send data:', data);
+            
+            // 发送数据给 Bot
+            tg.WebApp.sendData(JSON.stringify(data));
+            console.log('Data sent successfully');
+            
+            // 隐藏按钮
+            tg.MainButton.hide();
+            
+            // 显示确认消息
+            tg.showAlert('投资申请已提交，请等待审核');
+        } catch (error) {
+            console.error('Error in handleInvestmentClick:', error);
+            tg.showAlert('发送数据时出错: ' + error.message);
+        }
     });
 }
 
