@@ -39,82 +39,28 @@ def handle_message(update, context):
     try:
         # 记录所有收到的消息
         logger.info(f"Received message type: {type(update.message)}")
-        logger.info(f"Message attributes: {dir(update.message)}")
         
-        # 检查是否是 web app 数据
-        if hasattr(update.message, 'web_app_data'):
-            # 记录用户ID和数据
-            user_id = update.effective_user.id
-            logger.info(f"Received web app data from user ID: {user_id}")
-            
-            try:
-                # 解析从 Web App 收到的数据
-                data = json.loads(update.message.web_app_data.data)
-                logger.info(f"Successfully parsed data: {data}")
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {e}")
-                logger.error(f"Raw data: {update.message.web_app_data.data}")
-                raise
-            
-            # 获取投资信息
-            investment = data.get('investment', {})
-            user = data.get('user', {})
-            
-            logger.info(f"Processing investment: {investment}")
-            logger.info(f"User info: {user}")
-            
-            # 发送通知给用户
-            message = (
-                f"✅ 投资申请已收到\n\n"
-                f"📊 项目: {investment.get('title', 'N/A')}\n"
-                f"💰 收益率: {investment.get('returnRate', 'N/A')}\n"
-                f"⏱ 期限: {investment.get('period', 'N/A')}\n"
-                f"💵 最低投资: {investment.get('minAmount', 'N/A')}元\n\n"
-                f"请等待客服联系您确认投资详情。"
-            )
-            
-            try:
-                sent_message = context.bot.send_message(
-                    chat_id=user_id,
-                    text=message
-                )
-                logger.info(f"Message sent to user: {sent_message}")
-            except Exception as e:
-                logger.error(f"Error sending message to user: {e}")
-                raise
-            
-            # 发送通知给管理员
-            admin_message = (
-                f"🔔 新投资申请\n\n"
-                f"👤 用户: {user.get('first_name', 'N/A')} (@{user.get('username', 'N/A')})\n"
-                f"📊 项目: {investment.get('title', 'N/A')}\n"
-                f"💰 收益率: {investment.get('returnRate', 'N/A')}\n"
-                f"⏱ 期限: {investment.get('period', 'N/A')}\n"
-                f"💵 最低投资: {investment.get('minAmount', 'N/A')}元"
-            )
-            
-            try:
-                sent_admin_message = context.bot.send_message(
-                    chat_id=ADMIN_ID,
-                    text=admin_message
-                )
-                logger.info(f"Message sent to admin: {sent_admin_message}")
-            except Exception as e:
-                logger.error(f"Error sending message to admin: {e}")
-                raise
-                
-        else:
-            # 如果不是 web app 数据，记录消息类型
-            logger.info("Received regular message")
-            
+        # 检查是否是数字按钮点击
+        if update.message.text and update.message.text.isdigit():
+            number = int(update.message.text)
+            if 1 <= number <= 20:
+                # 处理数字按钮点击
+                handle_number_click(update, context, number)
+                return
+        
+        # 其他消息处理保持不变...
+        
     except Exception as e:
         logger.error(f"Error processing message: {e}", exc_info=True)
-        # 发送错误消息给用户
-        if update and update.effective_user:
-            context.bot.send_message(
-                chat_id=update.effective_user.id,
-                text="处理您的请求时出现错误，请稍后重试。"
-            )
+
+def handle_number_click(update, context, number):
+    """处理数字按钮点击"""
+    message = (
+        f"🎯 您选择了选项 {number}\n"
+        f"⏳ 正在处理您的请求...\n"
+        f"📞 客服稍后会与您联系"
+    )
+    update.message.reply_text(message)
 
 def error_handler(update, context):
     """处理错误"""
