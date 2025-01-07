@@ -6,6 +6,9 @@ tg.ready();
 // 展开 Web App 到全屏
 tg.expand();
 
+// 强制刷新缓存的版本号
+const version = '1.0.1';
+
 // 主题颜色相关设置
 document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
 document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
@@ -34,6 +37,9 @@ const mockData = {
         }
     ]
 };
+
+// 清除旧的内容
+document.getElementById('investment-list').innerHTML = '';
 
 // 更新统计数据
 document.getElementById('online-count').textContent = mockData.onlineCount;
