@@ -1,3 +1,4 @@
+from telegram import ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
 import logging
@@ -30,17 +31,19 @@ def start(update, context):
         ['🔥 广告投放', '❓ 帮助']
     ]
     
-    reply_markup = {
-        'keyboard': keyboard,
-        'resize_keyboard': True,
-        'one_time_keyboard': False
-    }
+    # 创建 ReplyKeyboardMarkup
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        input_field_placeholder="请选择功能或输入消息"
+    )
     
     update.message.reply_text(
         "👋 欢迎使用投资平台机器人!\n"
         "🎯 请点击下方按钮选择功能\n"
         "💡 提示: 点击数字按钮查看详细信息",
-        reply_markup=json.dumps(reply_markup)
+        reply_markup=reply_markup
     )
 
 def handle_message(update, context):
