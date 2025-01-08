@@ -149,3 +149,41 @@ body {
     margin-bottom: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 } 
+
+.investment-list {
+    margin: 20px 0;
+    padding: 15px;
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.investment-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.investment-item:hover {
+    background: #f5f5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.investment-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.investment-details {
+    font-size: 14px;
+    color: #666;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+} 

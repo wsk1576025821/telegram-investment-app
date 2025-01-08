@@ -141,16 +141,40 @@ function showCurrentUrl() {
     }
 }
 
-// 等待 DOM 加载完成
+// 初始化页面
+function initializePage() {
+    try {
+        // 显示当前 URL
+        showCurrentUrl();
+        
+        // 获取投资列表容器
+        const investmentList = document.getElementById('investment-list');
+        if (!investmentList) {
+            console.warn('Investment list container not found, creating one...');
+            const div = document.createElement('div');
+            div.id = 'investment-list';
+            div.className = 'investment-list';
+            document.querySelector('.container').appendChild(div);
+        }
+        
+        // 渲染投资列表
+        renderInvestments();
+        
+    } catch (error) {
+        console.error('Error initializing page:', error);
+    }
+}
+
+// 在 DOM 加载完成后初始化
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', showCurrentUrl);
+    document.addEventListener('DOMContentLoaded', initializePage);
 } else {
-    showCurrentUrl();
+    initializePage();
 }
 
 // 在 Telegram WebApp 准备就绪后也执行一次
 tg.ready(() => {
-    setTimeout(showCurrentUrl, 500); // 延迟执行以确保 DOM 已准备好
+    setTimeout(initializePage, 500);
 });
 
 // 处理投资点击事件
@@ -191,9 +215,6 @@ function handleInvestmentClick(investment) {
         }
     });
 }
-
-// 初始化页面
-renderInvestments();
 
 // 清理函数
 window.addEventListener('unload', () => {
