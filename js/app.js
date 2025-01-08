@@ -7,7 +7,7 @@ tg.ready();
 tg.expand();
 
 // 强制刷新缓存的版本号
-const version = '1.0.1';
+const version = '1.0.2';
 
 // 主题颜色相关设置
 document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
@@ -101,46 +101,56 @@ console.log('User params:', userParams);
 
 // 在初始化时显示当前 URL
 function showCurrentUrl() {
-    const urlDisplay = document.getElementById('url-display');
-    if (!urlDisplay) {
-        console.error('URL display element not found');
-        return;
+    try {
+        const urlDisplay = document.getElementById('url-display');
+        if (!urlDisplay) {
+            console.warn('URL display element not found, creating one...');
+            const div = document.createElement('div');
+            div.id = 'url-display';
+            div.className = 'url-display';
+            document.body.insertBefore(div, document.body.firstChild);
+            return setTimeout(showCurrentUrl, 100); // 重试
+        }
+        
+        // 显示完整 URL
+        const fullUrl = window.location.href;
+        let html = `
+            <div style="margin-bottom: 5px;">当前 URL:</div>
+            <div style="margin-bottom: 10px; color: #4CAF50;">${fullUrl}</div>
+        `;
+        
+        // 显示解析后的参数
+        const params = getUrlParams();
+        const paramsHtml = Object.entries(params)
+            .map(([key, value]) => `
+                <div style="margin-bottom: 3px;">
+                    <span style="color: #FFC107;">${key}:</span> 
+                    <span style="color: #4CAF50;">${value || '未设置'}</span>
+                </div>
+            `)
+            .join('');
+        
+        html += `
+            <div style="margin-bottom: 5px;">URL 参数:</div>
+            ${paramsHtml}
+        `;
+        
+        urlDisplay.innerHTML = html;
+    } catch (error) {
+        console.error('Error in showCurrentUrl:', error);
     }
-    
-    // 显示完整 URL
-    const fullUrl = window.location.href;
-    let html = `
-        <div style="margin-bottom: 5px;">当前 URL:</div>
-        <div style="margin-bottom: 10px; color: #4CAF50;">${fullUrl}</div>
-    `;
-    
-    // 显示解析后的参数
-    const params = getUrlParams();
-    const paramsHtml = Object.entries(params)
-        .map(([key, value]) => `
-            <div style="margin-bottom: 3px;">
-                <span style="color: #FFC107;">${key}:</span> 
-                <span style="color: #4CAF50;">${value || '未设置'}</span>
-            </div>
-        `)
-        .join('');
-    
-    html += `
-        <div style="margin-bottom: 5px;">URL 参数:</div>
-        ${paramsHtml}
-    `;
-    
-    urlDisplay.innerHTML = html;
 }
 
-// 确保在 DOM 加载完成后执行
-document.addEventListener('DOMContentLoaded', () => {
+// 等待 DOM 加载完成
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showCurrentUrl);
+} else {
     showCurrentUrl();
-});
+}
 
 // 在 Telegram WebApp 准备就绪后也执行一次
 tg.ready(() => {
-    showCurrentUrl();
+    setTimeout(showCurrentUrl, 500); // 延迟执行以确保 DOM 已准备好
 });
 
 // 处理投资点击事件
