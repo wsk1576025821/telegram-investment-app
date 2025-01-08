@@ -145,49 +145,35 @@ bot.on('message', async (msg) => {
         const user = msg.from;
         const text = msg.text;
 
-        // 构建用户信息
+        // 构建用户信息（与 /start 命令保持一致）
         const userInfo = {
-            user_id: user.id,
-            username: user.username || '',
+            user_id: user.id.toString(), // 确保是字符串
+            username: user.username || 'anonymous',
             first_name: user.first_name || '',
             last_name: user.last_name || '',
-            language: user.language_code || '',
-            chat_id: chatId,
-            is_bot: user.is_bot || false,
-            is_premium: user.is_premium || false,
+            language: user.language_code || 'zh',
+            chat_id: chatId.toString(), // 确保是字符串
+            is_bot: (user.is_bot || false).toString(), // 确保是字符串
+            is_premium: (user.is_premium || false).toString(), // 确保是字符串
             timestamp: new Date().toISOString()
         };
 
         // 创建 WebApp URL
-        const webAppUrl = `${BASE_URL}?${new URLSearchParams(userInfo).toString()}`;
-        console.log('Updated WebApp URL:', webAppUrl);
+        const params = new URLSearchParams(userInfo);
+        const webAppUrl = `${BASE_URL}?${params.toString()}`;
+        console.log('Message handler - User Info:', userInfo);
+        console.log('Message handler - Generated URL:', webAppUrl);
 
-        // 更新键盘布局
-        const keyboard = {
-            reply_markup: {
-                keyboard: [
-                    ['1', '2', '3', '4', '5', '6', '7'],
-                    ['8', '9', '10', '11', '12', '13', '14'],
-                    ['15', '16', '17', '18', '19', '20'],
-                    ['🔥 购买广告', '➡️ 下一页'],
-                    ['🔥 IM体育: 1个有效即享55%-70%-可...'],
-                    ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
-                    [{
-                        text: '🌐 打开投资平台',
-                        web_app: { url: webAppUrl }
-                    }],
-                    ['📋 官方简介', '📁 分类'],
-                    ['👤 我的', '💰 推广赚钱'],
-                    ['🔥 广告投放', '❓ 帮助']
-                ],
-                resize_keyboard: true
-            }
-        };
+        // 使用 getKeyboard 函数创建键盘
+        const keyboard = getKeyboard(webAppUrl);
+        if (!keyboard) {
+            console.error('Failed to create keyboard in message handler');
+            return;
+        }
 
         // 每次消息都更新键盘
         await bot.sendMessage(chatId, '请选择操作:', keyboard);
 
-        // 处理其他消息类型...
     } catch (error) {
         console.error('Error handling message:', error);
     }
