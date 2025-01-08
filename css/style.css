@@ -139,17 +139,35 @@ body {
     top: 10px;
     left: 10px;
     right: 10px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
-    border-radius: 5px;
-    font-size: 12px;
+    padding: 15px;
+    background: #ffffff !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    font-size: 13px;
     word-break: break-all;
     z-index: 1000;
     margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #eee;
-} 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.url-display .label {
+    color: #333333 !important;
+    font-weight: 500;
+}
+
+.url-display .value {
+    color: #2196F3 !important;
+    word-break: break-all;
+}
+
+.url-display .param-name {
+    color: #666666 !important;
+}
+
+.url-display .param-value {
+    color: #2196F3 !important;
+}
 
 .investment-list {
     margin: 20px 0;

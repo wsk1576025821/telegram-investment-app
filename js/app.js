@@ -6,12 +6,17 @@ tg.ready();
 // 展开 Web App 到全屏
 tg.expand();
 
+// 设置主题颜色
+tg.setHeaderColor('secondary_bg_color'); // 设置头部颜色
+tg.setBackgroundColor('secondary_bg_color'); // 设置背景颜色
+
 // 强制刷新缓存的版本号
-const version = '1.0.2';
+const version = '1.0.3';
 
 // 主题颜色相关设置
-document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
-document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
+document.documentElement.style.setProperty('--tg-theme-bg-color', '#ffffff');
+document.documentElement.style.setProperty('--tg-theme-text-color', '#333333');
+document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#ffffff');
 
 // 检测设备类型
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -115,23 +120,23 @@ function showCurrentUrl() {
         // 显示完整 URL
         const fullUrl = window.location.href;
         let html = `
-            <div style="margin-bottom: 5px; color: #333;">当前 URL:</div>
-            <div style="margin-bottom: 10px; color: #2196F3;">${fullUrl}</div>
+            <div class="label">当前 URL:</div>
+            <div class="value">${fullUrl}</div>
         `;
         
         // 显示解析后的参数
         const params = getUrlParams();
         const paramsHtml = Object.entries(params)
             .map(([key, value]) => `
-                <div style="margin-bottom: 3px;">
-                    <span style="color: #666;">${key}:</span> 
-                    <span style="color: #2196F3;">${value || '未设置'}</span>
+                <div>
+                    <span class="param-name">${key}:</span> 
+                    <span class="param-value">${value || '未设置'}</span>
                 </div>
             `)
             .join('');
         
         html += `
-            <div style="margin-bottom: 5px; color: #333;">URL 参数:</div>
+            <div class="label" style="margin-top: 10px;">URL 参数:</div>
             ${paramsHtml}
         `;
         
