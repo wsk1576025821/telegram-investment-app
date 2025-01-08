@@ -93,11 +93,14 @@ function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const result = {};
     
-    // 遍历所有参数
+    // 遍历所有参数并打印用于调试
     for (const [key, value] of params.entries()) {
+        console.log(`Parameter ${key}:`, value);
         result[key] = value;
     }
     
+    // 也打印整个 URL 用于调试
+    console.log('Full URL:', window.location.href);
     return result;
 }
 
@@ -118,6 +121,10 @@ function showCurrentUrl() {
             return setTimeout(showCurrentUrl, 100);
         }
         
+        // 获取并显示参数
+        const params = getUrlParams();
+        console.log('Parsed parameters:', params);
+
         // 显示完整 URL
         const fullUrl = window.location.href;
         let html = `
@@ -128,7 +135,6 @@ function showCurrentUrl() {
         `;
         
         // 显示用户参数
-        const params = getUrlParams();
         const userParamsHtml = `
             <div class="section">
                 <div class="label">用户信息:</div>
@@ -144,19 +150,7 @@ function showCurrentUrl() {
             </div>
         `;
         
-        // 显示按钮点击信息
-        const buttonParamsHtml = `
-            <div class="section">
-                <div class="label">按钮点击信息:</div>
-                <div class="param-group">
-                    <div><span class="param-name">类型:</span> <span class="param-value">${params.button_type || '未点击'}</span></div>
-                    <div><span class="param-name">值:</span> <span class="param-value">${params.button_value || '未点击'}</span></div>
-                    <div><span class="param-name">时间:</span> <span class="param-value">${params.timestamp || '未记录'}</span></div>
-                </div>
-            </div>
-        `;
-        
-        html += userParamsHtml + buttonParamsHtml;
+        html += userParamsHtml;
         urlDisplay.innerHTML = html;
     } catch (error) {
         console.error('Error in showCurrentUrl:', error);
@@ -194,9 +188,37 @@ if (document.readyState === 'loading') {
     initializePage();
 }
 
-// 在 Telegram WebApp 准备就绪后也执行一次
+// 在 Telegram WebApp 准备就绪后执行
 tg.ready(() => {
-    setTimeout(initializePage, 500);
+    // 获取 URL 参数
+    const params = getUrlParams();
+    console.log('WebApp initialized with params:', params);
+
+    // 显示参数
+    showCurrentUrl();
+
+    // 设置主按钮
+    tg.MainButton.setText('确认信息');
+    tg.MainButton.onClick(() => {
+        try {
+            // 准备要发送回 bot 的数据
+            const data = {
+                action: 'webapp_response',
+                params: params,
+                timestamp: new Date().toISOString()
+            };
+
+            // 发送数据回 bot
+            tg.sendData(JSON.stringify(data));
+            
+            // 关闭 WebApp
+            tg.close();
+        } catch (error) {
+            console.error('Error sending data:', error);
+            tg.showAlert('发送数据时出错: ' + error.message);
+        }
+    });
+    tg.MainButton.show();
 });
 
 // 处理投资点击事件

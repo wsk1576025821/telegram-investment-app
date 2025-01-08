@@ -55,19 +55,72 @@ function checkFiles() {
 async function gitOperations() {
     console.log('\nPerforming Git operations...');
     try {
+        // 检查 Git 状态
+        const status = await execCommand('git status --porcelain');
+        if (!status.trim()) {
+            console.log('No changes to commit ✅');
+            return; // 如果没有更改，直接返回
+        }
+
+        // 检查 Git 配置
+        try {
+            await execCommand('git config user.name');
+            await execCommand('git config user.email');
+        } catch (error) {
+            console.log('Setting up Git config...');
+            await execCommand('git config --global user.name "Deployment Bot"');
+            await execCommand('git config --global user.email "deploy@example.com"');
+        }
+
         // 添加文件
-        await execCommand('git add ' + config.watchFiles.join(' '));
-        console.log('Files added to git ✅');
+        for (const file of config.watchFiles) {
+            try {
+                if (fs.existsSync(file)) {
+                    await execCommand(`git add "${file}"`);
+                    console.log(`Added ${file} to git ✅`);
+                }
+            } catch (error) {
+                console.warn(`Warning: Could not add ${file}`);
+            }
+        }
+
+        // 再次检查是否有更改要提交
+        const statusAfterAdd = await execCommand('git status --porcelain');
+        if (!statusAfterAdd.trim()) {
+            console.log('No changes to commit after adding files ✅');
+            return;
+        }
 
         // 提交更改
-        await execCommand(`git commit -m "${config.git.commitMessage}"`);
-        console.log('Changes committed ✅');
+        try {
+            await execCommand(`git commit -m "${config.git.commitMessage}"`);
+            console.log('Changes committed ✅');
+        } catch (commitError) {
+            console.error('Commit failed, trying with --allow-empty');
+            await execCommand(`git commit --allow-empty -m "${config.git.commitMessage}"`);
+            console.log('Changes committed with --allow-empty ✅');
+        }
+
+        // 检查远程分支是否存在
+        try {
+            await execCommand(`git rev-parse --verify origin/${config.git.branch}`);
+        } catch (error) {
+            console.log(`Remote branch ${config.git.branch} not found, creating...`);
+            await execCommand(`git checkout -b ${config.git.branch}`);
+        }
 
         // 推送到远程
-        await execCommand(`git push origin ${config.git.branch}`);
-        console.log('Changes pushed to remote ✅');
+        try {
+            await execCommand(`git push origin ${config.git.branch}`);
+            console.log('Changes pushed to remote ✅');
+        } catch (pushError) {
+            console.log('Push failed, trying with --force');
+            await execCommand(`git push -f origin ${config.git.branch}`);
+            console.log('Changes force pushed to remote ✅');
+        }
     } catch (error) {
         console.error('Git operations failed ❌');
+        console.error('Error details:', error);
         throw error;
     }
 }
@@ -96,21 +149,30 @@ async function pm2Operations() {
             await execCommand('npm install -g pm2');
         }
 
-        // 停止现有进程
+        // 停止所有可能的 bot 实例
         try {
+            // 停止使用应用名称的实例
             await execCommand(`pm2 delete ${config.pm2.appName}`);
-            console.log('Existing process stopped ✅');
+            // 停止所有包含 bot.js 的进程
+            await execCommand('pm2 delete all');
+            console.log('All existing processes stopped ✅');
         } catch (error) {
             // 忽略错误，可能是进程不存在
         }
 
-        // 启动新进程
-        await execCommand(`pm2 start bot.js --name ${config.pm2.appName}`);
+        // 等待一段时间确保所有进程都已停止
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 启动新进程，添加更多选项
+        await execCommand(`pm2 start bot.js --name ${config.pm2.appName} --max-memory-restart 300M --wait-ready --listen-timeout 10000 --kill-timeout 5000`);
         console.log('New process started ✅');
 
         // 保存 PM2 配置
         await execCommand('pm2 save');
         console.log('PM2 configuration saved ✅');
+
+        // 显示运行状态
+        await execCommand('pm2 list');
     } catch (error) {
         console.error('PM2 operations failed ❌');
         throw error;
