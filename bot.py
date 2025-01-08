@@ -1,8 +1,9 @@
-from telegram import ReplyKeyboardMarkup, KeyboardButton
+from telegram import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
 import logging
 import os
+from urllib.parse import urlencode
 
 # 设置日志
 logging.basicConfig(
@@ -51,7 +52,7 @@ def start(update, context):
         ['🔥 购买广告', '➡️ 下一页'],
         ['🔥 IM体育: 1个有效即享55%-70%-可...'],
         ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
-        ['🏠注册送138🎲百家乐/棋牌/电竞体育...'],
+        [KeyboardButton(text='🌐 打开投资平台', web_app=WebAppInfo(url=miniapp_url))],
         ['📋 官方简介', '📁 分类'],
         ['👤 我的', '💰 推广赚钱'],
         ['🔥 广告投放', '❓ 帮助']
@@ -77,9 +78,6 @@ def start(update, context):
 def handle_message(update, context):
     """处理所有消息"""
     try:
-        # 记录所有收到的消息
-        logger.info(f"Received message: {update.message.text}")
-        
         # 获取用户信息
         user = update.effective_user
         user_info = (
@@ -90,6 +88,44 @@ def handle_message(update, context):
             f"语言: {user.language_code if user.language_code else '未知'}"
         )
 
+        # 构建 miniapp URL，包含用户信息
+        base_url = "https://wsk1576025821.github.io/telegram-investment-app"
+        user_params = {
+            'user_id': user.id,
+            'username': user.username or '',
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'language': user.language_code or ''
+        }
+        
+        # 创建带参数的 URL
+        miniapp_url = f"{base_url}?{urlencode(user_params)}"
+
+        # 创建自定义键盘，添加 miniapp 链接按钮
+        keyboard = [
+            ['1', '2', '3', '4', '5', '6', '7'],
+            ['8', '9', '10', '11', '12', '13', '14'],
+            ['15', '16', '17', '18', '19', '20'],
+            ['🔥 购买广告', '➡️ 下一页'],
+            ['🔥 IM体育: 1个有效即享55%-70%-可...'],
+            ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
+            [KeyboardButton(text='🌐 打开投资平台', web_app=WebAppInfo(url=miniapp_url))],
+            ['📋 官方简介', '📁 分类'],
+            ['👤 我的', '💰 推广赚钱'],
+            ['🔥 广告投放', '❓ 帮助']
+        ]
+        
+        # 创建 ReplyKeyboardMarkup
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard,
+            resize_keyboard=True,
+            one_time_keyboard=False,
+            input_field_placeholder="请选择功能或输入消息"
+        )
+        
+        # 记录所有收到的消息
+        logger.info(f"Received message: {update.message.text}")
+        
         # 检查是否是数字按钮点击
         if update.message.text and update.message.text.isdigit():
             number = int(update.message.text)

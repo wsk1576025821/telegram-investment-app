@@ -83,45 +83,53 @@ function renderInvestments() {
     });
 }
 
+// 获取 URL 参数
+function getUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        userId: params.get('user_id'),
+        username: params.get('username'),
+        firstName: params.get('first_name'),
+        lastName: params.get('last_name'),
+        language: params.get('language')
+    };
+}
+
+// 初始化时获取用户信息
+const userParams = getUrlParams();
+console.log('User params:', userParams);
+
 // 处理投资点击事件
 function handleInvestmentClick(investment) {
     console.log('Investment clicked:', investment);
     
-    // 使用 MainButton 替代 showPopup
     tg.MainButton.setText('确认投资');
     tg.MainButton.show();
     
-    // 存储当前选中的投资项目
     window.selectedInvestment = investment;
     
-    // 添加主按钮点击事件
     tg.MainButton.onClick(() => {
         try {
-            console.log('Main button clicked');
-            console.log('InitDataUnsafe:', tg.initDataUnsafe);
+            // 合并 URL 参数和 tg.initDataUnsafe 中的用户信息
+            const userData = {
+                id: userParams.userId || tg.initDataUnsafe?.user?.id || String(Date.now()),
+                username: userParams.username || tg.initDataUnsafe?.user?.username || 'unknown',
+                first_name: userParams.firstName || tg.initDataUnsafe?.user?.first_name || 'unknown',
+                last_name: userParams.lastName || tg.initDataUnsafe?.user?.last_name || '',
+                language: userParams.language || tg.initDataUnsafe?.user?.language_code || 'unknown'
+            };
             
-            // 准备发送的数据
             const data = {
                 action: 'invest',
                 investment: investment,
-                user: {
-                    id: tg.initDataUnsafe?.user?.id || String(Date.now()),
-                    username: tg.initDataUnsafe?.user?.username || 'unknown',
-                    first_name: tg.initDataUnsafe?.user?.first_name || 'unknown'
-                },
+                user: userData,
                 timestamp: new Date().toISOString()
             };
             
-            console.log('Preparing to send data:', data);
-            
-            // 发送数据给 Bot
+            console.log('Sending data:', data);
             tg.sendData(JSON.stringify(data));
-            console.log('Data sent successfully');
             
-            // 隐藏按钮
             tg.MainButton.hide();
-            
-            // 显示确认消息
             tg.showAlert('投资申请已提交，请等待审核');
         } catch (error) {
             console.error('Error in handleInvestmentClick:', error);
