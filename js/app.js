@@ -107,14 +107,25 @@ function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const result = {};
     
-    // 遍历所有参数并打印用于调试
+    // 只获取我们需要的参数
+    const neededParams = [
+        'user_id',
+        'username',
+        'first_name',
+        'last_name',
+        'language',
+        'chat_id',
+        'is_bot',
+        'is_premium'
+    ];
+    
+    // 遍历所有参数并只保留需要的
     for (const [key, value] of params.entries()) {
-        console.log(`Parameter ${key}:`, value);
-        result[key] = value;
+        if (neededParams.includes(key)) {
+            result[key] = value;
+        }
     }
     
-    // 也打印整个 URL 用于调试
-    console.log('Full URL:', window.location.href);
     return result;
 }
 
@@ -127,7 +138,6 @@ function showCurrentUrl() {
     try {
         console.log('Attempting to show URL info...');
         const urlDisplay = document.getElementById('url-display');
-        console.log('URL display element:', urlDisplay);
         
         if (!urlDisplay) {
             console.warn('URL display element not found, creating one...');
@@ -135,25 +145,12 @@ function showCurrentUrl() {
             div.id = 'url-display';
             div.className = 'url-display';
             document.body.insertBefore(div, document.body.firstChild);
-            console.log('Created URL display element');
             return setTimeout(showCurrentUrl, 100);
         }
 
         const params = getUrlParams();
-        console.log('URL Parameters:', params);
         
-        console.log('Parsed parameters:', params);
-
-        // 显示完整 URL
-        const fullUrl = window.location.href;
-        let html = `
-            <div class="section">
-                <div class="label">当前 URL:</div>
-                <div class="value">${fullUrl}</div>
-            </div>
-        `;
-        
-        // 显示用户参数
+        // 只显示用户参数，不显示完整 URL
         const userParamsHtml = `
             <div class="section">
                 <div class="label">用户信息:</div>
@@ -169,8 +166,7 @@ function showCurrentUrl() {
             </div>
         `;
         
-        html += userParamsHtml;
-        urlDisplay.innerHTML = html;
+        urlDisplay.innerHTML = userParamsHtml;
     } catch (error) {
         console.error('Error in showCurrentUrl:', error);
     }
