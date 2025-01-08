@@ -109,14 +109,14 @@ function showCurrentUrl() {
             div.id = 'url-display';
             div.className = 'url-display';
             document.body.insertBefore(div, document.body.firstChild);
-            return setTimeout(showCurrentUrl, 100); // 重试
+            return setTimeout(showCurrentUrl, 100);
         }
         
         // 显示完整 URL
         const fullUrl = window.location.href;
         let html = `
-            <div style="margin-bottom: 5px;">当前 URL:</div>
-            <div style="margin-bottom: 10px; color: #4CAF50;">${fullUrl}</div>
+            <div style="margin-bottom: 5px; color: #333;">当前 URL:</div>
+            <div style="margin-bottom: 10px; color: #2196F3;">${fullUrl}</div>
         `;
         
         // 显示解析后的参数
@@ -124,14 +124,14 @@ function showCurrentUrl() {
         const paramsHtml = Object.entries(params)
             .map(([key, value]) => `
                 <div style="margin-bottom: 3px;">
-                    <span style="color: #FFC107;">${key}:</span> 
-                    <span style="color: #4CAF50;">${value || '未设置'}</span>
+                    <span style="color: #666;">${key}:</span> 
+                    <span style="color: #2196F3;">${value || '未设置'}</span>
                 </div>
             `)
             .join('');
         
         html += `
-            <div style="margin-bottom: 5px;">URL 参数:</div>
+            <div style="margin-bottom: 5px; color: #333;">URL 参数:</div>
             ${paramsHtml}
         `;
         
