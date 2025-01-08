@@ -151,18 +151,40 @@ body {
     border: 1px solid rgba(0,0,0,0.1);
 }
 
+.url-display .section {
+    margin-bottom: 15px;
+}
+
+.url-display .section:last-child {
+    margin-bottom: 0;
+}
+
 .url-display .label {
     color: #333333 !important;
     font-weight: 500;
+    margin-bottom: 5px;
 }
 
 .url-display .value {
     color: #2196F3 !important;
     word-break: break-all;
+    margin-bottom: 10px;
+}
+
+.url-display .param-group {
+    background: rgba(0,0,0,0.02);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.url-display .param-group > div {
+    margin-bottom: 5px;
 }
 
 .url-display .param-name {
     color: #666666 !important;
+    display: inline-block;
+    width: 70px;
 }
 
 .url-display .param-value {

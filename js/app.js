@@ -120,26 +120,39 @@ function showCurrentUrl() {
         // 显示完整 URL
         const fullUrl = window.location.href;
         let html = `
-            <div class="label">当前 URL:</div>
-            <div class="value">${fullUrl}</div>
+            <div class="section">
+                <div class="label">当前 URL:</div>
+                <div class="value">${fullUrl}</div>
+            </div>
         `;
         
-        // 显示解析后的参数
+        // 显示用户参数
         const params = getUrlParams();
-        const paramsHtml = Object.entries(params)
-            .map(([key, value]) => `
-                <div>
-                    <span class="param-name">${key}:</span> 
-                    <span class="param-value">${value || '未设置'}</span>
+        const userParamsHtml = `
+            <div class="section">
+                <div class="label">用户信息:</div>
+                <div class="param-group">
+                    <div><span class="param-name">用户ID:</span> <span class="param-value">${params.userId || '未设置'}</span></div>
+                    <div><span class="param-name">用户名:</span> <span class="param-value">${params.username || '未设置'}</span></div>
+                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.firstName} ${params.lastName || ''}</span></div>
+                    <div><span class="param-name">语言:</span> <span class="param-value">${params.language || '未设置'}</span></div>
                 </div>
-            `)
-            .join('');
-        
-        html += `
-            <div class="label" style="margin-top: 10px;">URL 参数:</div>
-            ${paramsHtml}
+            </div>
         `;
         
+        // 显示按钮点击信息
+        const buttonParamsHtml = `
+            <div class="section">
+                <div class="label">按钮点击信息:</div>
+                <div class="param-group">
+                    <div><span class="param-name">类型:</span> <span class="param-value">${params.button_type || '未点击'}</span></div>
+                    <div><span class="param-name">值:</span> <span class="param-value">${params.button_value || '未点击'}</span></div>
+                    <div><span class="param-name">时间:</span> <span class="param-value">${params.timestamp || '未记录'}</span></div>
+                </div>
+            </div>
+        `;
+        
+        html += userParamsHtml + buttonParamsHtml;
         urlDisplay.innerHTML = html;
     } catch (error) {
         console.error('Error in showCurrentUrl:', error);

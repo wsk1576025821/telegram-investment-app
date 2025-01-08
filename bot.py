@@ -80,17 +80,7 @@ def handle_message(update, context):
     try:
         # 获取用户信息
         user = update.effective_user
-        user_info = (
-            f"👤 用户信息:\n"
-            f"ID: {user.id}\n"
-            f"用户名: @{user.username if user.username else '无'}\n"
-            f"姓名: {user.first_name} {user.last_name if user.last_name else ''}\n"
-            f"语言: {user.language_code if user.language_code else '未知'}"
-        )
-
-        # 构建 miniapp URL，包含用户信息
-        base_url = "https://wsk1576025821.github.io/telegram-investment-app"
-        user_params = {
+        user_info = {
             'user_id': user.id,
             'username': user.username or '',
             'first_name': user.first_name or '',
@@ -98,8 +88,22 @@ def handle_message(update, context):
             'language': user.language_code or ''
         }
         
+        # 构建 miniapp URL，包含用户信息和按钮信息
+        base_url = "https://wsk1576025821.github.io/telegram-investment-app"
+        
+        if update.message.text and update.message.text.isdigit():
+            number = int(update.message.text)
+            user_info['button_type'] = 'number'
+            user_info['button_value'] = str(number)
+        else:
+            user_info['button_type'] = 'text'
+            user_info['button_value'] = update.message.text or ''
+        
+        # 添加时间戳
+        user_info['timestamp'] = update.message.date.strftime('%Y-%m-%d %H:%M:%S')
+
         # 创建带参数的 URL
-        miniapp_url = f"{base_url}?{urlencode(user_params)}"
+        miniapp_url = f"{base_url}?{urlencode(user_info)}"
 
         # 创建自定义键盘，添加 miniapp 链接按钮
         keyboard = [
