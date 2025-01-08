@@ -101,48 +101,47 @@ console.log('User params:', userParams);
 
 // 在初始化时显示当前 URL
 function showCurrentUrl() {
-    // 创建或获取显示 URL 的元素
-    let urlDisplay = document.getElementById('url-display');
+    const urlDisplay = document.getElementById('url-display');
     if (!urlDisplay) {
-        urlDisplay = document.createElement('div');
-        urlDisplay.id = 'url-display';
-        urlDisplay.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 5px;
-            font-size: 12px;
-            word-break: break-all;
-            z-index: 1000;
-        `;
-        document.body.appendChild(urlDisplay);
+        console.error('URL display element not found');
+        return;
     }
     
     // 显示完整 URL
     const fullUrl = window.location.href;
-    urlDisplay.innerHTML = `
-        <div>Current URL:</div>
-        <div style="margin-top: 5px;">${fullUrl}</div>
+    let html = `
+        <div style="margin-bottom: 5px;">当前 URL:</div>
+        <div style="margin-bottom: 10px; color: #4CAF50;">${fullUrl}</div>
     `;
     
     // 显示解析后的参数
     const params = getUrlParams();
     const paramsHtml = Object.entries(params)
-        .map(([key, value]) => `<div>${key}: ${value || 'not set'}</div>`)
+        .map(([key, value]) => `
+            <div style="margin-bottom: 3px;">
+                <span style="color: #FFC107;">${key}:</span> 
+                <span style="color: #4CAF50;">${value || '未设置'}</span>
+            </div>
+        `)
         .join('');
     
-    urlDisplay.innerHTML += `
-        <div style="margin-top: 10px;">Parameters:</div>
-        <div style="margin-top: 5px;">${paramsHtml}</div>
+    html += `
+        <div style="margin-bottom: 5px;">URL 参数:</div>
+        ${paramsHtml}
     `;
+    
+    urlDisplay.innerHTML = html;
 }
 
-// 显示当前 URL
-showCurrentUrl();
+// 确保在 DOM 加载完成后执行
+document.addEventListener('DOMContentLoaded', () => {
+    showCurrentUrl();
+});
+
+// 在 Telegram WebApp 准备就绪后也执行一次
+tg.ready(() => {
+    showCurrentUrl();
+});
 
 // 处理投资点击事件
 function handleInvestmentClick(investment) {
