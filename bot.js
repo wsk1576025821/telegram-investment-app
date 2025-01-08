@@ -1,225 +1,223 @@
 const TelegramBot = require('node-telegram-bot-api');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const lockFile = 'bot.lock';
+const path = require('path');
 
 // 加载环境变量
 dotenv.config();
 
-// Bot Token
-const token = process.env.TELEGRAM_BOT_TOKEN || '7582221284:AAGvtmNC5RmjSRcumethqzgWPkSTJRYHxQg';
-const adminId = "7036647707";
-
-// 添加配置选项
-const botOptions = {
-    polling: {
-        interval: 300,
-        autoStart: true,
-        params: {
-            timeout: 10
-        }
-    },
-    // 添加 webHook: false 确保不会同时使用 webhook
-    webHook: false
+// 配置
+const config = {
+    version: process.env.VERSION || '1.0.4',
+    debug: process.env.DEBUG === 'true',
+    baseUrl: "https://wsk1576025821.github.io/telegram-investment-app",
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    adminId: process.env.ADMIN_ID || "7036647707",
+    lockFile: 'bot.lock'
 };
 
-// 创建 bot 实例时使用这些选项
-const bot = new TelegramBot(token, botOptions);
-
-// 基础 URL
-const BASE_URL = "https://wsk1576025821.github.io/telegram-investment-app";
-
-// 创建键盘布局
-const getKeyboard = (webAppUrl) => {
-    // 打印 URL 用于调试
-    console.log('Creating keyboard with WebApp URL:', webAppUrl);
-    
-    return {
-        reply_markup: {
-            keyboard: [
-                ['1', '2', '3', '4', '5', '6', '7'],
-                ['8', '9', '10', '11', '12', '13', '14'],
-                ['15', '16', '17', '18', '19', '20'],
-                ['🔥 购买广告', '➡️ 下一页'],
-                ['🔥 IM体育: 1个有效即享55%-70%-可...'],
-                ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
-                [{
-                    text: '🌐 打开投资平台',
-                    web_app: { 
-                        url: webAppUrl,
-                        // 添加更多 WebApp 配置
-                        parse_mode: 'HTML',
-                        disable_web_page_preview: false,
-                        protect_content: false
-                    }
-                }],
-                ['📋 官方简介', '📁 分类'],
-                ['👤 我的', '💰 推广赚钱'],
-                ['🔥 广告投放', '❓ 帮助']
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: false
-        }
-    };
+// 日志工具
+const logger = {
+    debug: (...args) => config.debug && console.log('[Debug]', ...args),
+    error: (...args) => console.error('[Error]', ...args),
+    info: (...args) => console.log('[Info]', ...args)
 };
 
-// 检查是否已经有实例在运行
-function checkLock() {
-    try {
-        if (fs.existsSync(lockFile)) {
-            const pid = fs.readFileSync(lockFile, 'utf8');
-            try {
-                // 检查进程是否还在运行
-                process.kill(parseInt(pid), 0);
-                console.error(`Bot is already running with PID ${pid}`);
-                process.exit(1);
-            } catch (e) {
-                // 进程不存在，删除锁文件
-                fs.unlinkSync(lockFile);
+// 进程锁管理
+class ProcessLock {
+    static checkAndCreate() {
+        try {
+            if (fs.existsSync(config.lockFile)) {
+                const pid = fs.readFileSync(config.lockFile, 'utf8');
+                try {
+                    process.kill(parseInt(pid), 0);
+                    logger.error(`Bot is already running with PID ${pid}`);
+                    process.exit(1);
+                } catch (e) {
+                    fs.unlinkSync(config.lockFile);
+                }
             }
+            fs.writeFileSync(config.lockFile, process.pid.toString());
+        } catch (error) {
+            logger.error('Lock file handling error:', error);
         }
-        // 创建新的锁文件
-        fs.writeFileSync(lockFile, process.pid.toString());
-    } catch (error) {
-        console.error('Error handling lock file:', error);
+    }
+
+    static remove() {
+        try {
+            fs.existsSync(config.lockFile) && fs.unlinkSync(config.lockFile);
+        } catch (error) {
+            logger.error('Error removing lock file:', error);
+        }
     }
 }
 
-// 在启动时检查锁
-checkLock();
-
-// 在退出时删除锁文件
-process.on('exit', () => {
-    try {
-        fs.unlinkSync(lockFile);
-    } catch (error) {
-        // 忽略错误
-    }
-});
-
-// 创建 WebApp URL
-const createWebAppUrl = (userInfo) => {
-    const baseUrl = "https://wsk1576025821.github.io/telegram-investment-app/";
-    const params = new URLSearchParams();
-    
-    // 确保所有参数都有值且正确编码
-    const safeUserInfo = {
-        user_id: String(userInfo.user_id || ''),
-        username: userInfo.username || 'anonymous',
-        first_name: userInfo.first_name || '',
-        last_name: userInfo.last_name || '',
-        language: userInfo.language || 'zh',
-        chat_id: String(userInfo.chat_id || ''),
-        is_bot: String(userInfo.is_bot || false),
-        is_premium: String(userInfo.is_premium || false),
-        timestamp: userInfo.timestamp || new Date().toISOString()
-    };
-    
-    Object.entries(safeUserInfo).forEach(([key, value]) => {
-        params.append(key, encodeURIComponent(value));
-    });
-    
-    return `${baseUrl}?${params.toString()}`;
-};
-
-// 处理 /start 命令
-bot.onText(/\/start/, async (msg) => {
-    const chatId = msg.chat.id;
-    const user = msg.from;
-    
-    // 构建用户信息
-    const userInfo = {
-        user_id: String(user.id),
-        username: user.username || 'anonymous',
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        language: user.language_code || 'zh',
-        chat_id: String(chatId),
-        is_bot: String(user.is_bot || false),
-        is_premium: String(user.is_premium || false),
-        timestamp: new Date().toISOString()
-    };
-    
-    console.log('User info from Telegram:', user);
-    console.log('Processed user info:', userInfo);
-    
-    // 使用新的 URL 生成函数
-    const webAppUrl = createWebAppUrl(userInfo);
-    
-    // 创建键盘布局
-    const keyboard = getKeyboard(webAppUrl);
-    await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
-});
-
-// 处理其他消息
-bot.on('message', async (msg) => {
-    try {
-        // 检查是否有 WebApp 数据
-        if (msg.web_app_data) {
-            console.log('Received WebApp data:', msg.web_app_data);
-            return;
-        }
-
-        const chatId = msg.chat.id;
-        const user = msg.from;
-        const text = msg.text;
-
-        // 构建用户信息（与 /start 命令保持一致）
-        const userInfo = {
-            user_id: user.id.toString(), // 确保是字符串
-            username: user.username || 'anonymous',
-            first_name: user.first_name || '',
-            last_name: user.last_name || '',
-            language: user.language_code || 'zh',
-            chat_id: chatId.toString(), // 确保是字符串
-            is_bot: (user.is_bot || false).toString(), // 确保是字符串
-            is_premium: (user.is_premium || false).toString(), // 确保是字符串
-            timestamp: new Date().toISOString()
-        };
-
-        // 创建 WebApp URL
-        const params = new URLSearchParams(userInfo);
-        const webAppUrl = `${BASE_URL}?${params.toString()}`;
-        console.log('Message handler - User Info:', userInfo);
-        console.log('Message handler - Generated URL:', webAppUrl);
-
-        // 使用 getKeyboard 函数创建键盘
-        const keyboard = getKeyboard(webAppUrl);
-        if (!keyboard) {
-            console.error('Failed to create keyboard in message handler');
-            return;
-        }
-
-        // 每次消息都更新键盘
-        await bot.sendMessage(chatId, '请选择操作:', keyboard);
-
-    } catch (error) {
-        console.error('Error handling message:', error);
-    }
-});
-
-// 添加错误处理
-bot.on('polling_error', (error) => {
-    // 如果是冲突错误，尝试重新启动
-    if (error.code === 'ETELEGRAM' && error.response.statusCode === 409) {
-        console.log('Conflict detected, restarting polling...');
-        bot.stopPolling().then(() => {
-            setTimeout(() => {
-                bot.startPolling();
-            }, 1000);
+// URL 生成器
+class UrlGenerator {
+    static createWebAppUrl(userInfo) {
+        const params = new URLSearchParams();
+        const safeUserInfo = this.sanitizeUserInfo(userInfo);
+        
+        Object.entries(safeUserInfo).forEach(([key, value]) => {
+            params.append(key, encodeURIComponent(value));
         });
-    } else {
-        console.error('Polling error:', error);
+        
+        return `${config.baseUrl}?${params.toString()}`;
     }
-});
 
-// 添加优雅退出处理
-process.on('SIGINT', () => {
-    console.log('Stopping bot...');
-    bot.stopPolling().then(() => {
-        console.log('Bot stopped');
+    static sanitizeUserInfo(userInfo) {
+        return {
+            user_id: String(userInfo.user_id || ''),
+            username: userInfo.username || 'anonymous',
+            first_name: userInfo.first_name || '',
+            last_name: userInfo.last_name || '',
+            language: userInfo.language || 'zh',
+            chat_id: String(userInfo.chat_id || ''),
+            is_bot: String(userInfo.is_bot || false),
+            is_premium: String(userInfo.is_premium || false),
+            timestamp: userInfo.timestamp || new Date().toISOString()
+        };
+    }
+}
+
+// 键盘生成器
+class KeyboardGenerator {
+    static create(webAppUrl) {
+        logger.debug('Creating keyboard with URL:', webAppUrl);
+        
+        return {
+            reply_markup: {
+                keyboard: [
+                    ['1', '2', '3', '4', '5', '6', '7'],
+                    ['8', '9', '10', '11', '12', '13', '14'],
+                    ['15', '16', '17', '18', '19', '20'],
+                    ['🔥 购买广告', '➡️ 下一页'],
+                    ['🔥 IM体育: 1个有效即享55%-70%-可...'],
+                    ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
+                    [{
+                        text: '🌐 打开投资平台',
+                        web_app: { 
+                            url: webAppUrl,
+                            parse_mode: 'HTML',
+                            disable_web_page_preview: false,
+                            protect_content: false
+                        }
+                    }],
+                    ['📋 官方简介', '📁 分类'],
+                    ['👤 我的', '💰 推广赚钱'],
+                    ['🔥 广告投放', '❓ 帮助']
+                ],
+                resize_keyboard: true,
+                one_time_keyboard: false
+            }
+        };
+    }
+}
+
+// Bot 类
+class TelegramInvestmentBot {
+    constructor() {
+        this.bot = new TelegramBot(config.botToken, {
+            polling: {
+                interval: 300,
+                autoStart: true,
+                params: { timeout: 10 }
+            },
+            webHook: false
+        });
+        
+        this.setupEventHandlers();
+        this.setupErrorHandling();
+    }
+
+    setupEventHandlers() {
+        this.bot.onText(/\/start/, this.handleStart.bind(this));
+        this.bot.on('message', this.handleMessage.bind(this));
+    }
+
+    setupErrorHandling() {
+        this.bot.on('polling_error', this.handlePollingError.bind(this));
+        process.on('SIGINT', this.handleShutdown.bind(this));
+        process.on('exit', ProcessLock.remove);
+    }
+
+    async handleStart(msg) {
+        try {
+            const chatId = msg.chat.id;
+            const user = msg.from;
+            
+            const userInfo = {
+                user_id: String(user.id),
+                username: user.username,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                language: user.language_code,
+                chat_id: String(chatId),
+                is_bot: user.is_bot,
+                is_premium: user.is_premium,
+                timestamp: new Date().toISOString()
+            };
+            
+            logger.debug('User info:', userInfo);
+            
+            const webAppUrl = UrlGenerator.createWebAppUrl(userInfo);
+            const keyboard = KeyboardGenerator.create(webAppUrl);
+            
+            await this.bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
+        } catch (error) {
+            logger.error('Start command error:', error);
+        }
+    }
+
+    async handleMessage(msg) {
+        try {
+            if (msg.web_app_data) {
+                logger.debug('WebApp data received:', msg.web_app_data);
+                return;
+            }
+
+            const chatId = msg.chat.id;
+            const userInfo = {
+                user_id: msg.from.id,
+                username: msg.from.username,
+                first_name: msg.from.first_name,
+                last_name: msg.from.last_name,
+                language: msg.from.language_code,
+                chat_id: chatId,
+                is_bot: msg.from.is_bot,
+                is_premium: msg.from.is_premium,
+                timestamp: new Date().toISOString()
+            };
+
+            const webAppUrl = UrlGenerator.createWebAppUrl(userInfo);
+            const keyboard = KeyboardGenerator.create(webAppUrl);
+            
+            await this.bot.sendMessage(chatId, '请选择操作:', keyboard);
+        } catch (error) {
+            logger.error('Message handling error:', error);
+        }
+    }
+
+    handlePollingError(error) {
+        if (error.code === 'ETELEGRAM' && error.response?.statusCode === 409) {
+            logger.info('Conflict detected, restarting polling...');
+            this.bot.stopPolling()
+                .then(() => setTimeout(() => this.bot.startPolling(), 1000))
+                .catch(err => logger.error('Polling restart error:', err));
+        } else {
+            logger.error('Polling error:', error);
+        }
+    }
+
+    async handleShutdown() {
+        logger.info('Shutting down bot...');
+        await this.bot.stopPolling();
+        ProcessLock.remove();
         process.exit(0);
-    });
-});
+    }
+}
 
-console.log('Bot is running...'); 
+// 启动 bot
+ProcessLock.checkAndCreate();
+const bot = new TelegramInvestmentBot();
+logger.info('Bot is running...'); 
