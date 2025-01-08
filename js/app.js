@@ -5,17 +5,129 @@ console.log('Search params:', window.location.search);
 
 // 初始化 Telegram WebApp
 let tg = window.Telegram?.WebApp;
-if (!tg) {
-    console.error('Telegram WebApp not available');
-    // 如果不是在 Telegram WebApp 中打开，显示提示
-    document.body.innerHTML = '<div style="padding: 20px; text-align: center;">请在 Telegram 中打开此页面</div>';
-} else {
-    console.log('Telegram WebApp initialized');
-    console.log('WebApp version:', tg.version);
-    console.log('WebApp platform:', tg.platform);
-    console.log('Initial data:', tg.initData);
-    // ... 其他初始化代码
+
+// 等待 WebApp 完全初始化
+function initializeWebApp() {
+    return new Promise((resolve) => {
+        if (!tg) {
+            console.error('Telegram WebApp not available');
+            document.body.innerHTML = '<div style="padding: 20px; text-align: center;">请在 Telegram 中打开此页面</div>';
+            return;
+        }
+
+        // 确保 WebApp 已准备就绪
+        if (tg.initDataUnsafe) {
+            resolve();
+        } else {
+            tg.onEvent('viewportChanged', () => {
+                if (tg.initDataUnsafe) {
+                    resolve();
+                }
+            });
+            
+            // 设置超时，防止无限等待
+            setTimeout(resolve, 1000);
+        }
+    });
 }
+
+// 修改 debugWebAppUrl 函数
+async function debugWebAppUrl() {
+    await initializeWebApp();
+    
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+
+    // 准备调试信息
+    const debugText = `
+WebApp URL Info:
+----------------
+URL: ${window.location.href}
+Search: ${window.location.search}
+Platform: ${tg?.platform || 'unknown'}
+Version: ${tg?.version || 'unknown'}
+Time: ${new Date().toISOString()}
+    `.trim();
+
+    // 创建按钮容器
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    `;
+
+    // 创建调试按钮
+    const debugButton = document.createElement('button');
+    debugButton.textContent = '📋 复制当前 URL';
+    debugButton.style.cssText = `
+        padding: 8px 16px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        margin: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    `;
+    
+    debugButton.onclick = () => {
+        try {
+            // 直接复制 URL
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => {
+                    tg.showAlert(`URL 已复制到剪贴板:\n${window.location.href}`);
+                })
+                .catch(err => {
+                    console.error('Copy failed:', err);
+                    // 使用备用方法
+                    const textarea = document.createElement('textarea');
+                    textarea.value = window.location.href;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    tg.showAlert('URL 已复制到剪贴板');
+                });
+        } catch (error) {
+            console.error('Error copying URL:', error);
+            tg.showAlert('复制失败，请重试');
+        }
+    };
+
+    // 添加按钮到容器
+    buttonContainer.appendChild(debugButton);
+    document.body.insertBefore(buttonContainer, document.body.firstChild);
+
+    // 调整页面内容的上边距
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.marginTop = '50px';
+    }
+}
+
+// 在 DOM 加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+    // 等待 WebApp 初始化
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready(() => {
+            console.log('WebApp ready event triggered');
+            debugWebAppUrl();
+        });
+    } else {
+        debugWebAppUrl();
+    }
+});
 
 // 初始化 Telegram Mini App
 tg.ready();
@@ -324,97 +436,3 @@ if (window.Telegram?.WebApp) {
 
 // 3. 在 URL 发生变化时
 window.addEventListener('popstate', checkWebAppUrl); 
-
-// 修改 debugWebAppUrl 函数
-function debugWebAppUrl() {
-    const tg = window.Telegram?.WebApp;
-    
-    // 准备调试信息
-    const debugText = `
-WebApp URL Info:
-----------------
-URL: ${window.location.href}
-Search: ${window.location.search}
-Platform: ${tg?.platform || 'unknown'}
-Version: ${tg?.version || 'unknown'}
-Time: ${new Date().toISOString()}
-    `.trim();
-
-    // 使用 Telegram WebApp 的原生弹窗显示
-    if (tg) {
-        // 创建一个固定在顶部的按钮容器
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        `;
-
-        // 创建调试按钮
-        const debugButton = document.createElement('button');
-        debugButton.textContent = '📋 复制当前 URL';
-        debugButton.style.cssText = `
-            padding: 8px 16px;
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        `;
-        
-        debugButton.onclick = () => {
-            // 直接复制 URL
-            navigator.clipboard.writeText(window.location.href)
-                .then(() => {
-                    tg.showAlert(`URL 已复制到剪贴板:\n${window.location.href}`);
-                })
-                .catch(err => {
-                    tg.showAlert('复制失败: ' + err.message);
-                });
-        };
-
-        // 添加按钮到容器
-        buttonContainer.appendChild(debugButton);
-        
-        // 添加容器到页面
-        document.body.insertBefore(buttonContainer, document.body.firstChild);
-        
-        // 调整页面内容的上边距，防止被按钮遮挡
-        const container = document.querySelector('.container');
-        if (container) {
-            container.style.marginTop = '50px';
-        }
-    }
-    
-    // 在控制台打印调试信息
-    console.log('%c==== WebApp URL Debug Info ====', 'background: #222; color: #bada55');
-    console.log('📍 Full URL:', window.location.href);
-    console.log('🔍 Search:', window.location.search);
-    console.log('📱 Platform:', tg?.platform);
-    console.log('📱 Version:', tg?.version);
-    console.log('📱 Init Data:', tg?.initData);
-    console.log('📱 Init Data Unsafe:', tg?.initDataUnsafe);
-}
-
-// 确保在 DOM 加载完成后调用
-document.addEventListener('DOMContentLoaded', debugWebAppUrl);
-
-// 在 Telegram WebApp 准备就绪时也调用
-if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready(() => {
-        console.log('WebApp ready event triggered');
-        debugWebAppUrl();
-    });
-}
