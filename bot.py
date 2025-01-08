@@ -2,6 +2,7 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import json
 import logging
+import os
 
 # 设置日志
 logging.basicConfig(
@@ -10,13 +11,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Bot Token
-TOKEN = "7582221284:AAGvtmNC5RmjSRcumethqzgWPkSTJRYHxQg"
+# 从环境变量获取 TOKEN
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not TOKEN:
+    raise ValueError("No token found! Set your TELEGRAM_BOT_TOKEN environment variable.")
 # 管理员 ID
 ADMIN_ID = "7036647707"
 
 def start(update, context):
     """处理 /start 命令"""
+    # 获取用户信息
+    user = update.effective_user
+    user_info = (
+        f"👤 用户信息:\n"
+        f"ID: {user.id}\n"
+        f"用户名: @{user.username if user.username else '无'}\n"
+        f"姓名: {user.first_name} {user.last_name if user.last_name else ''}\n"
+        f"语言: {user.language_code if user.language_code else '未知'}"
+    )
+    
+    # 记录用户信息
+    logger.info(f"New user started bot: {user_info}")
+    
+    # 发送用户信息给管理员
+    if str(ADMIN_ID).isdigit():
+        context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"新用户开始使用机器人:\n{user_info}"
+        )
+    
     # 创建自定义键盘
     keyboard = [
         ['1', '2', '3', '4', '5', '6', '7'],
@@ -39,10 +62,12 @@ def start(update, context):
         input_field_placeholder="请选择功能或输入消息"
     )
     
+    # 发送欢迎消息
     update.message.reply_text(
-        "👋 欢迎使用投资平台机器人!\n"
-        "🎯 请点击下方按钮选择功能\n"
-        "💡 提示: 点击数字按钮查看详细信息",
+        f"👋 欢迎使用投资平台机器人!\n"
+        f"🎯 请点击下方按钮选择功能\n"
+        f"💡 提示: 点击数字按钮查看详细信息\n\n"
+        f"{user_info}",
         reply_markup=reply_markup
     )
 
@@ -104,7 +129,19 @@ def handle_category_click(update, context):
     update.message.reply_text("📁 分类信息\n\n1. 体育投资\n2. 棋牌游戏\n3. 电子竞技")
 
 def handle_profile_click(update, context):
-    update.message.reply_text("👤 个人中心\n\n请联系客服开通账户")
+    """处理个人中心点击"""
+    user = update.effective_user
+    profile_info = (
+        f"👤 个人信息\n\n"
+        f"用户ID: {user.id}\n"
+        f"用户名: @{user.username if user.username else '未设置'}\n"
+        f"姓名: {user.first_name} {user.last_name if user.last_name else ''}\n"
+        f"语言: {user.language_code if user.language_code else '未知'}\n\n"
+        f"💫 账户状态: {'已认证' if str(user.id) == ADMIN_ID else '普通用户'}\n"
+        f"📅 加入时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        f"如需更多信息，请联系客服"
+    )
+    update.message.reply_text(profile_info)
 
 def handle_promotion_click(update, context):
     update.message.reply_text("💰 推广说明\n\n加入我们的推广计划，享受高额佣金")
