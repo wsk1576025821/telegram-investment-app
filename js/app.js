@@ -342,46 +342,60 @@ Time: ${new Date().toISOString()}
 
     // 使用 Telegram WebApp 的原生弹窗显示
     if (tg) {
-        // 创建一个固定在底部的按钮
-        const debugButton = document.createElement('button');
-        debugButton.textContent = '📋 显示 URL 信息';
-        debugButton.style.cssText = `
+        // 创建一个固定在顶部的按钮容器
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
             position: fixed;
-            bottom: 60px; /* 放在底部菜单上方 */
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+
+        // 创建调试按钮
+        const debugButton = document.createElement('button');
+        debugButton.textContent = '📋 复制当前 URL';
+        debugButton.style.cssText = `
+            padding: 8px 16px;
             background: #2196F3;
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 8px;
             font-size: 14px;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         `;
         
         debugButton.onclick = () => {
-            tg.showPopup({
-                title: 'WebApp URL 信息',
-                message: debugText,
-                buttons: [{
-                    type: 'default',
-                    text: '复制 URL',
-                    id: 'copy_url'
-                }, {
-                    type: 'close',
-                    text: '关闭'
-                }]
-            }, (buttonId) => {
-                if (buttonId === 'copy_url') {
-                    navigator.clipboard.writeText(window.location.href)
-                        .then(() => tg.showAlert('URL 已复制到剪贴板'))
-                        .catch(err => tg.showAlert('复制失败: ' + err.message));
-                }
-            });
+            // 直接复制 URL
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => {
+                    tg.showAlert(`URL 已复制到剪贴板:\n${window.location.href}`);
+                })
+                .catch(err => {
+                    tg.showAlert('复制失败: ' + err.message);
+                });
         };
+
+        // 添加按钮到容器
+        buttonContainer.appendChild(debugButton);
         
-        document.body.appendChild(debugButton);
+        // 添加容器到页面
+        document.body.insertBefore(buttonContainer, document.body.firstChild);
+        
+        // 调整页面内容的上边距，防止被按钮遮挡
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.marginTop = '50px';
+        }
     }
     
     // 在控制台打印调试信息
