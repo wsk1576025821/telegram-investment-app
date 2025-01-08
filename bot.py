@@ -77,31 +77,77 @@ def handle_message(update, context):
         # 记录所有收到的消息
         logger.info(f"Received message: {update.message.text}")
         
+        # 获取用户信息
+        user = update.effective_user
+        user_info = (
+            f"👤 用户信息:\n"
+            f"ID: {user.id}\n"
+            f"用户名: @{user.username if user.username else '无'}\n"
+            f"姓名: {user.first_name} {user.last_name if user.last_name else ''}\n"
+            f"语言: {user.language_code if user.language_code else '未知'}"
+        )
+        
         # 检查是否是数字按钮点击
         if update.message.text and update.message.text.isdigit():
             number = int(update.message.text)
             if 1 <= number <= 20:
-                handle_number_click(update, context, number)
+                message = (
+                    f"🎯 您选择了选项 {number}\n"
+                    f"⏳ 正在处理您的请求...\n"
+                    f"📞 客服稍后会与您联系\n\n"
+                    f"{user_info}"  # 添加用户信息
+                )
+                update.message.reply_text(message)
+                
+                # 同时发送给管理员
+                if str(ADMIN_ID).isdigit():
+                    admin_message = (
+                        f"🔔 用户点击了选项 {number}\n\n"
+                        f"{user_info}\n"
+                        f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
+                    context.bot.send_message(
+                        chat_id=ADMIN_ID,
+                        text=admin_message
+                    )
                 return
         
         # 处理其他按钮点击
         if update.message.text:
+            message_with_info = None
+            
             if "购买广告" in update.message.text:
-                handle_ad_click(update, context)
+                message_with_info = f"🔥 购买广告请联系客服\n\n{user_info}"
             elif "IM体育" in update.message.text:
-                handle_sport_click(update, context)
+                message_with_info = f"🏆 IM体育详情请联系客服\n\n{user_info}"
             elif "官方简介" in update.message.text:
-                handle_intro_click(update, context)
+                message_with_info = f"📋 官方简介\n\n这是一个专业的投资理财平台...\n\n{user_info}"
             elif "分类" in update.message.text:
-                handle_category_click(update, context)
+                message_with_info = f"📁 分类信息\n\n1. 体育投资\n2. 棋牌游戏\n3. 电子竞技\n\n{user_info}"
             elif "我的" in update.message.text:
                 handle_profile_click(update, context)
+                return
             elif "推广赚钱" in update.message.text:
-                handle_promotion_click(update, context)
+                message_with_info = f"💰 推广说明\n\n加入我们的推广计划，享受高额佣金\n\n{user_info}"
             elif "广告投放" in update.message.text:
-                handle_ad_post_click(update, context)
+                message_with_info = f"🔥 广告投放说明\n\n请联系客服了解详情\n\n{user_info}"
             elif "帮助" in update.message.text:
-                handle_help_click(update, context)
+                message_with_info = f"❓ 帮助中心\n\n如有问题请联系在线客服\n\n{user_info}"
+            
+            if message_with_info:
+                update.message.reply_text(message_with_info)
+                
+                # 发送用户操作信息给管理员
+                if str(ADMIN_ID).isdigit():
+                    admin_message = (
+                        f"🔔 用户点击了: {update.message.text}\n\n"
+                        f"{user_info}\n"
+                        f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
+                    context.bot.send_message(
+                        chat_id=ADMIN_ID,
+                        text=admin_message
+                    )
         
     except Exception as e:
         logger.error(f"Error processing message: {e}", exc_info=True)
