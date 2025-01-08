@@ -122,10 +122,18 @@ function getUrlParams() {
     // 遍历所有参数并只保留需要的
     for (const [key, value] of params.entries()) {
         if (neededParams.includes(key)) {
-            result[key] = value;
+            // 处理布尔值
+            if (value === 'true' || value === 'false') {
+                result[key] = value === 'true';
+            } else if (value === 'undefined' || value === 'null') {
+                result[key] = '';
+            } else {
+                result[key] = value;
+            }
         }
     }
     
+    console.log('Parsed URL parameters:', result);
     return result;
 }
 
@@ -149,6 +157,7 @@ function showCurrentUrl() {
         }
 
         const params = getUrlParams();
+        console.log('Displaying user info:', params);
         
         // 只显示用户参数，不显示完整 URL
         const userParamsHtml = `
@@ -157,11 +166,11 @@ function showCurrentUrl() {
                 <div class="param-group">
                     <div><span class="param-name">用户ID:</span> <span class="param-value">${params.user_id || '未设置'}</span></div>
                     <div><span class="param-name">用户名:</span> <span class="param-value">${params.username || '未设置'}</span></div>
-                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.first_name} ${params.last_name || ''}</span></div>
+                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.first_name || ''} ${params.last_name || ''}</span></div>
                     <div><span class="param-name">语言:</span> <span class="param-value">${params.language || '未设置'}</span></div>
                     <div><span class="param-name">聊天ID:</span> <span class="param-value">${params.chat_id || '未设置'}</span></div>
-                    <div><span class="param-name">是否机器人:</span> <span class="param-value">${params.is_bot === 'true' ? '是' : '否'}</span></div>
-                    <div><span class="param-name">是否高级用户:</span> <span class="param-value">${params.is_premium === 'true' ? '是' : '否'}</span></div>
+                    <div><span class="param-name">是否机器人:</span> <span class="param-value">${params.is_bot ? '是' : '否'}</span></div>
+                    <div><span class="param-name">是否高级用户:</span> <span class="param-value">${params.is_premium ? '是' : '否'}</span></div>
                 </div>
             </div>
         `;

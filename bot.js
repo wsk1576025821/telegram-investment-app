@@ -34,6 +34,12 @@ const getKeyboard = (webAppUrl) => {
     // 打印 URL 用于调试
     console.log('Creating keyboard with WebApp URL:', webAppUrl);
     
+    // 确保 webAppUrl 包含用户信息
+    if (!webAppUrl.includes('user_id=')) {
+        console.error('WebApp URL missing user info:', webAppUrl);
+        return null;
+    }
+    
     return {
         reply_markup: {
             keyboard: [
@@ -98,42 +104,29 @@ bot.onText(/\/start/, async (msg) => {
     
     // 构建用户信息
     const userInfo = {
-        user_id: user.id,
-        username: user.username || '',
+        user_id: user.id.toString(), // 确保是字符串
+        username: user.username || 'anonymous',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        language: user.language_code || '',
-        chat_id: chatId,
-        is_bot: user.is_bot || false,
-        is_premium: user.is_premium || false,
+        language: user.language_code || 'zh',
+        chat_id: chatId.toString(), // 确保是字符串
+        is_bot: (user.is_bot || false).toString(), // 确保是字符串
+        is_premium: (user.is_premium || false).toString(), // 确保是字符串
         timestamp: new Date().toISOString()
     };
     
     // 创建 WebApp URL
-    const webAppUrl = `${BASE_URL}?${new URLSearchParams(userInfo).toString()}`;
+    const params = new URLSearchParams(userInfo);
+    const webAppUrl = `${BASE_URL}?${params.toString()}`;
     console.log('Generated WebApp URL:', webAppUrl);
+    console.log('User Info:', userInfo);
 
     // 创建键盘布局
-    const keyboard = {
-        reply_markup: {
-            keyboard: [
-                ['1', '2', '3', '4', '5', '6', '7'],
-                ['8', '9', '10', '11', '12', '13', '14'],
-                ['15', '16', '17', '18', '19', '20'],
-                ['🔥 购买广告', '➡️ 下一页'],
-                ['🔥 IM体育: 1个有效即享55%-70%-可...'],
-                ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
-                [{
-                    text: '🌐 打开投资平台',
-                    web_app: { url: webAppUrl }
-                }],
-                ['📋 官方简介', '📁 分类'],
-                ['👤 我的', '💰 推广赚钱'],
-                ['🔥 广告投放', '❓ 帮助']
-            ],
-            resize_keyboard: true
-        }
-    };
+    const keyboard = getKeyboard(webAppUrl);
+    if (!keyboard) {
+        console.error('Failed to create keyboard');
+        return;
+    }
 
     // 发送欢迎消息
     await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
