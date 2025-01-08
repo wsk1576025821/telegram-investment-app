@@ -132,7 +132,6 @@ def handle_message(update, context):
                 )
             elif "我的" in update.message.text:
                 handle_profile_click(update, context)
-                return
             elif "推广赚钱" in update.message.text:
                 message_with_info = f"💰 推广说明\n\n加入我们的推广计划，享受高额佣金\n\n{user_info}"
             elif "广告投放" in update.message.text:
@@ -142,18 +141,18 @@ def handle_message(update, context):
             
             if message_with_info:
                 update.message.reply_text(message_with_info)
-                
-                # 发送用户操作信息给管理员
-                if str(ADMIN_ID).isdigit():
-                    admin_message = (
-                        f"🔔 用户点击了: {update.message.text}\n\n"
-                        f"{user_info}\n"
-                        f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                    context.bot.send_message(
-                        chat_id=ADMIN_ID,
-                        text=admin_message
-                    )
+            
+            # 移到这里，确保所有按钮点击都会发送管理员通知
+            if str(ADMIN_ID).isdigit():
+                admin_message = (
+                    f"🔔 用户点击了: {update.message.text}\n\n"
+                    f"{user_info}\n"
+                    f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+                context.bot.send_message(
+                    chat_id=ADMIN_ID,
+                    text=admin_message
+                )
         
     except Exception as e:
         logger.error(f"Error processing message: {e}", exc_info=True)
