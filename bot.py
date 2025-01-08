@@ -87,6 +87,8 @@ def handle_message(update, context):
             'last_name': user.last_name or '',
             'language': user.language_code or ''
         }
+        print('1111111111111111111111111111111111111111111111')
+        print(user_info)
         
         # 构建 miniapp URL，包含用户信息和按钮信息
         base_url = "https://wsk1576025821.github.io/telegram-investment-app"
