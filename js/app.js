@@ -325,9 +325,8 @@ if (window.Telegram?.WebApp) {
 // 3. 在 URL 发生变化时
 window.addEventListener('popstate', checkWebAppUrl); 
 
-// 在文件顶部添加调试函数
+// 修改 debugWebAppUrl 函数
 function debugWebAppUrl() {
-    // 获取 Telegram WebApp 实例
     const tg = window.Telegram?.WebApp;
     
     // 准备调试信息
@@ -343,12 +342,25 @@ Time: ${new Date().toISOString()}
 
     // 使用 Telegram WebApp 的原生弹窗显示
     if (tg) {
-        // 添加一个按钮到 Telegram WebApp
-        tg.MainButton.setText('显示 URL 信息');
-        tg.MainButton.show();
+        // 创建一个固定在底部的按钮
+        const debugButton = document.createElement('button');
+        debugButton.textContent = '📋 显示 URL 信息';
+        debugButton.style.cssText = `
+            position: fixed;
+            bottom: 60px; /* 放在底部菜单上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        `;
         
-        tg.MainButton.onClick(() => {
-            // 使用 Telegram 的原生弹窗显示信息
+        debugButton.onclick = () => {
             tg.showPopup({
                 title: 'WebApp URL 信息',
                 message: debugText,
@@ -362,13 +374,14 @@ Time: ${new Date().toISOString()}
                 }]
             }, (buttonId) => {
                 if (buttonId === 'copy_url') {
-                    // 复制 URL 到剪贴板
                     navigator.clipboard.writeText(window.location.href)
                         .then(() => tg.showAlert('URL 已复制到剪贴板'))
                         .catch(err => tg.showAlert('复制失败: ' + err.message));
                 }
             });
-        });
+        };
+        
+        document.body.appendChild(debugButton);
     }
     
     // 在控制台打印调试信息
@@ -381,17 +394,13 @@ Time: ${new Date().toISOString()}
     console.log('📱 Init Data Unsafe:', tg?.initDataUnsafe);
 }
 
-// 在多个时机调用调试函数
-// 1. 页面加载时
+// 确保在 DOM 加载完成后调用
 document.addEventListener('DOMContentLoaded', debugWebAppUrl);
 
-// 2. Telegram WebApp 准备就绪时
+// 在 Telegram WebApp 准备就绪时也调用
 if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready(() => {
         console.log('WebApp ready event triggered');
         debugWebAppUrl();
     });
 }
-
-// 3. URL 变化时
-window.addEventListener('popstate', debugWebAppUrl); 
