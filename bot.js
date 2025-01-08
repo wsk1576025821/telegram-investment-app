@@ -103,6 +103,8 @@ bot.on('message', async (msg) => {
             is_premium: user.is_premium || false
         };
 
+        console.log('1111111111111111111111111', userInfo)
+
         // 创建 WebApp URL 并添加所有用户信息
         const webAppUrl = `${BASE_URL}?${new URLSearchParams(userInfo).toString()}`;
 
