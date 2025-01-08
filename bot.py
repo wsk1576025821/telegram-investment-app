@@ -86,7 +86,7 @@ def handle_message(update, context):
             f"姓名: {user.first_name} {user.last_name if user.last_name else ''}\n"
             f"语言: {user.language_code if user.language_code else '未知'}"
         )
-        
+
         # 检查是否是数字按钮点击
         if update.message.text and update.message.text.isdigit():
             number = int(update.message.text)
@@ -111,7 +111,7 @@ def handle_message(update, context):
                         text=admin_message
                     )
                 return
-        
+
         # 处理其他按钮点击
         if update.message.text:
             message_with_info = None
@@ -123,34 +123,18 @@ def handle_message(update, context):
             elif "官方简介" in update.message.text:
                 message_with_info = f"📋 官方简介\n\n这是一个专业的投资理财平台...\n\n{user_info}"
             elif "分类" in update.message.text:
-                # 修改分类信息的回复，添加用户信息
-                category_info = (
+                message_with_info = (
                     "📁 分类信息\n\n"
                     "1. 体育投资\n"
                     "2. 棋牌游戏\n"
                     "3. 电子竞技\n\n"
                     f"{user_info}"
                 )
-                update.message.reply_text(category_info)
-                
-                # 发送用户操作信息给管理员
-                if str(ADMIN_ID).isdigit():
-                    admin_message = (
-                        f"🔔 用户点击了: 分类\n\n"
-                        f"{user_info}\n"
-                        f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                    context.bot.send_message(
-                        chat_id=ADMIN_ID,
-                        text=admin_message
-                    )
+            elif "我的" in update.message.text:
+                handle_profile_click(update, context)
                 return
             elif "推广赚钱" in update.message.text:
-                message_with_info = (
-                    f"💰 推广说明\n\n"
-                    f"加入我们的推广计划，享受高额佣金\n\n"
-                    f"{user_info}"
-                )
+                message_with_info = f"💰 推广说明\n\n加入我们的推广计划，享受高额佣金\n\n{user_info}"
             elif "广告投放" in update.message.text:
                 message_with_info = f"🔥 广告投放说明\n\n请联系客服了解详情\n\n{user_info}"
             elif "帮助" in update.message.text:
