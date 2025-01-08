@@ -6,6 +6,20 @@ tg.ready();
 // 展开 Web App 到全屏
 tg.expand();
 
+// 确保在 DOM 加载完成后立即显示用户信息
+document.addEventListener('DOMContentLoaded', () => {
+    // 立即显示用户信息
+    showCurrentUrl();
+    
+    // 初始化其他内容
+    initializePage();
+});
+
+// 在 Telegram WebApp 准备就绪后再次检查
+tg.ready(() => {
+    showCurrentUrl();
+});
+
 // 设置主题颜色
 tg.setHeaderColor('secondary_bg_color'); // 设置头部颜色
 tg.setBackgroundColor('secondary_bg_color'); // 设置背景颜色
@@ -111,18 +125,23 @@ console.log('User params:', userParams);
 // 在初始化时显示当前 URL
 function showCurrentUrl() {
     try {
+        console.log('Attempting to show URL info...');
         const urlDisplay = document.getElementById('url-display');
+        console.log('URL display element:', urlDisplay);
+        
         if (!urlDisplay) {
             console.warn('URL display element not found, creating one...');
             const div = document.createElement('div');
             div.id = 'url-display';
             div.className = 'url-display';
             document.body.insertBefore(div, document.body.firstChild);
+            console.log('Created URL display element');
             return setTimeout(showCurrentUrl, 100);
         }
-        
-        // 获取并显示参数
+
         const params = getUrlParams();
+        console.log('URL Parameters:', params);
+        
         console.log('Parsed parameters:', params);
 
         // 显示完整 URL
@@ -180,46 +199,6 @@ function initializePage() {
         console.error('Error initializing page:', error);
     }
 }
-
-// 在 DOM 加载完成后初始化
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-    initializePage();
-}
-
-// 在 Telegram WebApp 准备就绪后执行
-tg.ready(() => {
-    // 获取 URL 参数
-    const params = getUrlParams();
-    console.log('WebApp initialized with params:', params);
-
-    // 显示参数
-    showCurrentUrl();
-
-    // 设置主按钮
-    tg.MainButton.setText('确认信息');
-    tg.MainButton.onClick(() => {
-        try {
-            // 准备要发送回 bot 的数据
-            const data = {
-                action: 'webapp_response',
-                params: params,
-                timestamp: new Date().toISOString()
-            };
-
-            // 发送数据回 bot
-            tg.sendData(JSON.stringify(data));
-            
-            // 关闭 WebApp
-            tg.close();
-        } catch (error) {
-            console.error('Error sending data:', error);
-            tg.showAlert('发送数据时出错: ' + error.message);
-        }
-    });
-    tg.MainButton.show();
-});
 
 // 处理投资点击事件
 function handleInvestmentClick(investment) {
