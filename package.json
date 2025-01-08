@@ -1,6 +1,6 @@
 {
   "name": "telegram-investment-bot",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Telegram Investment Platform Bot",
   "main": "bot.js",
   "scripts": {

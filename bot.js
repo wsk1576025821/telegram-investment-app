@@ -104,27 +104,22 @@ const createWebAppUrl = (userInfo) => {
     
     // 确保所有参数都有值且正确编码
     const safeUserInfo = {
-        user_id: userInfo.user_id || '',
+        user_id: String(userInfo.user_id || ''),
         username: userInfo.username || 'anonymous',
         first_name: userInfo.first_name || '',
         last_name: userInfo.last_name || '',
         language: userInfo.language || 'zh',
-        chat_id: userInfo.chat_id || '',
+        chat_id: String(userInfo.chat_id || ''),
         is_bot: String(userInfo.is_bot || false),
         is_premium: String(userInfo.is_premium || false),
         timestamp: userInfo.timestamp || new Date().toISOString()
     };
     
-    // 添加参数前打印调试信息
-    console.log('Creating URL with user info:', safeUserInfo);
-    
     Object.entries(safeUserInfo).forEach(([key, value]) => {
-        params.append(key, encodeURIComponent(value || ''));
+        params.append(key, encodeURIComponent(value));
     });
     
-    const finalUrl = `${baseUrl}?${params.toString()}`;
-    console.log('Final WebApp URL:', finalUrl);
-    return finalUrl;
+    return `${baseUrl}?${params.toString()}`;
 };
 
 // 处理 /start 命令

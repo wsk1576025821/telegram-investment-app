@@ -179,6 +179,24 @@ async function pm2Operations() {
     }
 }
 
+// 添加版本检查
+async function checkVersions() {
+    const packageJson = require('./package.json');
+    const files = [
+        { path: 'js/app.js', pattern: /version: ['"](.+?)['"]/ },
+        { path: 'index.html', pattern: /css\/style\.css\?v=(.+?)"/ },
+        { path: 'index.html', pattern: /app\.js\?v=(.+?)"/ }
+    ];
+
+    for (const file of files) {
+        const content = fs.readFileSync(file.path, 'utf8');
+        const match = content.match(file.pattern);
+        if (match && match[1] !== packageJson.version) {
+            console.warn(`Version mismatch in ${file.path}: ${match[1]} != ${packageJson.version}`);
+        }
+    }
+}
+
 // 主函数
 async function deploy() {
     console.log('Starting deployment...\n');
@@ -194,6 +212,9 @@ async function deploy() {
 
         // PM2 操作
         await pm2Operations();
+
+        // 检查版本
+        await checkVersions();
 
         console.log('\n✨ Deployment completed successfully! ✨');
     } catch (error) {
