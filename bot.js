@@ -102,9 +102,24 @@ const createWebAppUrl = (userInfo) => {
     const baseUrl = "https://wsk1576025821.github.io/telegram-investment-app/";
     const params = new URLSearchParams();
     
-    // 确保所有参数都经过正确编码
-    Object.entries(userInfo).forEach(([key, value]) => {
-        params.append(key, encodeURIComponent(value));
+    // 确保所有参数都有值且正确编码
+    const safeUserInfo = {
+        user_id: userInfo.user_id || '',
+        username: userInfo.username || 'anonymous',
+        first_name: userInfo.first_name || '',
+        last_name: userInfo.last_name || '',
+        language: userInfo.language || 'zh',
+        chat_id: userInfo.chat_id || '',
+        is_bot: String(userInfo.is_bot || false),
+        is_premium: String(userInfo.is_premium || false),
+        timestamp: userInfo.timestamp || new Date().toISOString()
+    };
+    
+    // 添加参数前打印调试信息
+    console.log('Creating URL with user info:', safeUserInfo);
+    
+    Object.entries(safeUserInfo).forEach(([key, value]) => {
+        params.append(key, encodeURIComponent(value || ''));
     });
     
     const finalUrl = `${baseUrl}?${params.toString()}`;
@@ -119,20 +134,23 @@ bot.onText(/\/start/, async (msg) => {
     
     // 构建用户信息
     const userInfo = {
-        user_id: user.id.toString(),
+        user_id: String(user.id),
         username: user.username || 'anonymous',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         language: user.language_code || 'zh',
-        chat_id: chatId.toString(),
-        is_bot: (user.is_bot || false).toString(),
-        is_premium: (user.is_premium || false).toString(),
+        chat_id: String(chatId),
+        is_bot: String(user.is_bot || false),
+        is_premium: String(user.is_premium || false),
         timestamp: new Date().toISOString()
     };
     
+    console.log('User info from Telegram:', user);
+    console.log('Processed user info:', userInfo);
+    
     // 使用新的 URL 生成函数
     const webAppUrl = createWebAppUrl(userInfo);
-
+    
     // 创建键盘布局
     const keyboard = getKeyboard(webAppUrl);
     await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);

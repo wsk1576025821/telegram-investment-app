@@ -128,14 +128,26 @@ function getUrlParams() {
         // 遍历并解码所有参数
         for (const [key, value] of params.entries()) {
             try {
-                result[key] = decodeURIComponent(value);
+                const decodedValue = decodeURIComponent(value);
+                // 不要返回 'undefined' 或 'null' 字符串
+                result[key] = decodedValue === 'undefined' || decodedValue === 'null' ? '' : decodedValue;
             } catch (e) {
                 console.error(`Error decoding parameter ${key}:`, e);
                 result[key] = value;
             }
         }
         
-        console.log('Decoded parameters:', result);
+        // 如果 URL 参数为空，尝试从 Telegram WebApp 获取
+        if (!result.user_id && window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            result.user_id = String(user.id);
+            result.username = user.username || 'anonymous';
+            result.first_name = user.first_name || '';
+            result.last_name = user.last_name || '';
+            result.language = user.language_code || 'zh';
+        }
+        
+        console.log('Final parsed parameters:', result);
         return result;
     } catch (error) {
         console.error('Error parsing URL parameters:', error);
@@ -150,9 +162,7 @@ console.log('User params:', userParams);
 // 在初始化时显示当前 URL
 function showCurrentUrl() {
     try {
-        console.log('Attempting to show URL info...');
         const urlDisplay = document.getElementById('url-display');
-        
         if (!urlDisplay) {
             console.warn('URL display element not found, creating one...');
             const div = document.createElement('div');
@@ -165,18 +175,17 @@ function showCurrentUrl() {
         const params = getUrlParams();
         console.log('Displaying user info:', params);
         
-        // 只显示用户参数，不显示完整 URL
         const userParamsHtml = `
             <div class="section">
                 <div class="label">用户信息:</div>
                 <div class="param-group">
-                    <div><span class="param-name">用户ID:</span> <span class="param-value">${params.user_id || '未设置'}</span></div>
-                    <div><span class="param-name">用户名:</span> <span class="param-value">${params.username || '未设置'}</span></div>
-                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.first_name || ''} ${params.last_name || ''}</span></div>
+                    <div><span class="param-name">用户ID:</span> <span class="param-value">${params.user_id || '未知'}</span></div>
+                    <div><span class="param-name">用户名:</span> <span class="param-value">${params.username !== 'anonymous' ? params.username : '未设置'}</span></div>
+                    <div><span class="param-name">姓名:</span> <span class="param-value">${[params.first_name, params.last_name].filter(Boolean).join(' ') || '未设置'}</span></div>
                     <div><span class="param-name">语言:</span> <span class="param-value">${params.language || '未设置'}</span></div>
                     <div><span class="param-name">聊天ID:</span> <span class="param-value">${params.chat_id || '未设置'}</span></div>
-                    <div><span class="param-name">是否机器人:</span> <span class="param-value">${params.is_bot ? '是' : '否'}</span></div>
-                    <div><span class="param-name">是否高级用户:</span> <span class="param-value">${params.is_premium ? '是' : '否'}</span></div>
+                    <div><span class="param-name">是否机器人:</span> <span class="param-value">${params.is_bot === 'true' ? '是' : '否'}</span></div>
+                    <div><span class="param-name">是否高级用户:</span> <span class="param-value">${params.is_premium === 'true' ? '是' : '否'}</span></div>
                 </div>
             </div>
         `;
