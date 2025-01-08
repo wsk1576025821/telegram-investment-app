@@ -1,4 +1,21 @@
-let tg = window.Telegram.WebApp;
+console.log('App.js loaded from:', window.location.href);
+console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
+console.log('Current URL:', window.location.href);
+console.log('Search params:', window.location.search);
+
+// 初始化 Telegram WebApp
+let tg = window.Telegram?.WebApp;
+if (!tg) {
+    console.error('Telegram WebApp not available');
+    // 如果不是在 Telegram WebApp 中打开，显示提示
+    document.body.innerHTML = '<div style="padding: 20px; text-align: center;">请在 Telegram 中打开此页面</div>';
+} else {
+    console.log('Telegram WebApp initialized');
+    console.log('WebApp version:', tg.version);
+    console.log('WebApp platform:', tg.platform);
+    console.log('Initial data:', tg.initData);
+    // ... 其他初始化代码
+}
 
 // 初始化 Telegram Mini App
 tg.ready();
@@ -102,39 +119,28 @@ function renderInvestments() {
     });
 }
 
-// 获取 URL 参数
+// 获取 URL 参数和 Telegram WebApp 用户信息
 function getUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const result = {};
-    
-    // 只获取我们需要的参数
-    const neededParams = [
-        'user_id',
-        'username',
-        'first_name',
-        'last_name',
-        'language',
-        'chat_id',
-        'is_bot',
-        'is_premium'
-    ];
-    
-    // 遍历所有参数并只保留需要的
-    for (const [key, value] of params.entries()) {
-        if (neededParams.includes(key)) {
-            // 处理布尔值
-            if (value === 'true' || value === 'false') {
-                result[key] = value === 'true';
-            } else if (value === 'undefined' || value === 'null') {
-                result[key] = '';
-            } else {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const result = {};
+        
+        // 遍历并解码所有参数
+        for (const [key, value] of params.entries()) {
+            try {
+                result[key] = decodeURIComponent(value);
+            } catch (e) {
+                console.error(`Error decoding parameter ${key}:`, e);
                 result[key] = value;
             }
         }
+        
+        console.log('Decoded parameters:', result);
+        return result;
+    } catch (error) {
+        console.error('Error parsing URL parameters:', error);
+        return {};
     }
-    
-    console.log('Parsed URL parameters:', result);
-    return result;
 }
 
 // 初始化时获取用户信息
@@ -249,4 +255,63 @@ window.addEventListener('unload', () => {
     if (tg.MainButton.isVisible) {
         tg.MainButton.hide();
     }
-}); 
+});
+
+// 在文件顶部添加 URL 检查函数
+function checkWebAppUrl() {
+    console.log('========== WebApp URL Check ==========');
+    console.log('1. Full URL:', window.location.href);
+    console.log('2. Search string:', window.location.search);
+    console.log('3. Hash:', window.location.hash);
+    
+    // 解析 URL 参数
+    const params = new URLSearchParams(window.location.search);
+    console.log('4. All parameters:');
+    for (const [key, value] of params.entries()) {
+        console.log(`   ${key}: ${value}`);
+    }
+    
+    // 检查关键参数
+    const criticalParams = ['user_id', 'username', 'first_name'];
+    console.log('5. Critical parameters check:');
+    criticalParams.forEach(param => {
+        console.log(`   ${param}: ${params.get(param) || 'MISSING'}`);
+    });
+    
+    // 检查 Telegram WebApp 数据
+    console.log('6. Telegram WebApp data:');
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        console.log('   WebApp initialized:', !!tg);
+        console.log('   Platform:', tg.platform);
+        console.log('   Version:', tg.version);
+        console.log('   Init data:', tg.initData);
+        if (tg.initDataUnsafe?.user) {
+            console.log('   User data available:', {
+                id: tg.initDataUnsafe.user.id,
+                username: tg.initDataUnsafe.user.username,
+                first_name: tg.initDataUnsafe.user.first_name
+            });
+        } else {
+            console.log('   No user data in WebApp');
+        }
+    } else {
+        console.log('   WebApp not available');
+    }
+    console.log('====================================');
+}
+
+// 在多个地方调用检查
+// 1. 页面加载时
+document.addEventListener('DOMContentLoaded', checkWebAppUrl);
+
+// 2. Telegram WebApp 准备就绪时
+if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready(() => {
+        console.log('WebApp ready event triggered');
+        checkWebAppUrl();
+    });
+}
+
+// 3. 在 URL 发生变化时
+window.addEventListener('popstate', checkWebAppUrl); 

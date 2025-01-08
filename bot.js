@@ -34,12 +34,6 @@ const getKeyboard = (webAppUrl) => {
     // 打印 URL 用于调试
     console.log('Creating keyboard with WebApp URL:', webAppUrl);
     
-    // 确保 webAppUrl 包含用户信息
-    if (!webAppUrl.includes('user_id=')) {
-        console.error('WebApp URL missing user info:', webAppUrl);
-        return null;
-    }
-    
     return {
         reply_markup: {
             keyboard: [
@@ -51,7 +45,13 @@ const getKeyboard = (webAppUrl) => {
                 ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
                 [{
                     text: '🌐 打开投资平台',
-                    web_app: { url: webAppUrl }
+                    web_app: { 
+                        url: webAppUrl,
+                        // 添加更多 WebApp 配置
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: false,
+                        protect_content: false
+                    }
                 }],
                 ['📋 官方简介', '📁 分类'],
                 ['👤 我的', '💰 推广赚钱'],
@@ -97,6 +97,21 @@ process.on('exit', () => {
     }
 });
 
+// 创建 WebApp URL
+const createWebAppUrl = (userInfo) => {
+    const baseUrl = "https://wsk1576025821.github.io/telegram-investment-app/";
+    const params = new URLSearchParams();
+    
+    // 确保所有参数都经过正确编码
+    Object.entries(userInfo).forEach(([key, value]) => {
+        params.append(key, encodeURIComponent(value));
+    });
+    
+    const finalUrl = `${baseUrl}?${params.toString()}`;
+    console.log('Final WebApp URL:', finalUrl);
+    return finalUrl;
+};
+
 // 处理 /start 命令
 bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -104,31 +119,22 @@ bot.onText(/\/start/, async (msg) => {
     
     // 构建用户信息
     const userInfo = {
-        user_id: user.id.toString(), // 确保是字符串
+        user_id: user.id.toString(),
         username: user.username || 'anonymous',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         language: user.language_code || 'zh',
-        chat_id: chatId.toString(), // 确保是字符串
-        is_bot: (user.is_bot || false).toString(), // 确保是字符串
-        is_premium: (user.is_premium || false).toString(), // 确保是字符串
+        chat_id: chatId.toString(),
+        is_bot: (user.is_bot || false).toString(),
+        is_premium: (user.is_premium || false).toString(),
         timestamp: new Date().toISOString()
     };
     
-    // 创建 WebApp URL
-    const params = new URLSearchParams(userInfo);
-    const webAppUrl = `${BASE_URL}?${params.toString()}`;
-    console.log('Generated WebApp URL:', webAppUrl);
-    console.log('User Info:', userInfo);
+    // 使用新的 URL 生成函数
+    const webAppUrl = createWebAppUrl(userInfo);
 
     // 创建键盘布局
     const keyboard = getKeyboard(webAppUrl);
-    if (!keyboard) {
-        console.error('Failed to create keyboard');
-        return;
-    }
-
-    // 发送欢迎消息
     await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
 });
 
