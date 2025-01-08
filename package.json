@@ -7,7 +7,7 @@
     "start": "node bot.js",
     "dev": "nodemon bot.js",
     "deploy": "node deploy.js",
-    "pm2:start": "pm2 start bot.js --name telegram-bot --max-memory-restart 300M",
+    "pm2:start": "pm2 start bot.js --name telegram-bot --max-memory-restart 300M --watch",
     "pm2:stop": "pm2 stop telegram-bot",
     "pm2:restart": "pm2 restart telegram-bot",
     "pm2:delete": "pm2 delete telegram-bot",
