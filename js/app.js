@@ -91,13 +91,14 @@ function renderInvestments() {
 // 获取 URL 参数
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    return {
-        userId: params.get('user_id'),
-        username: params.get('username'),
-        firstName: params.get('first_name'),
-        lastName: params.get('last_name'),
-        language: params.get('language')
-    };
+    const result = {};
+    
+    // 遍历所有参数
+    for (const [key, value] of params.entries()) {
+        result[key] = value;
+    }
+    
+    return result;
 }
 
 // 初始化时获取用户信息
@@ -132,10 +133,13 @@ function showCurrentUrl() {
             <div class="section">
                 <div class="label">用户信息:</div>
                 <div class="param-group">
-                    <div><span class="param-name">用户ID:</span> <span class="param-value">${params.userId || '未设置'}</span></div>
+                    <div><span class="param-name">用户ID:</span> <span class="param-value">${params.user_id || '未设置'}</span></div>
                     <div><span class="param-name">用户名:</span> <span class="param-value">${params.username || '未设置'}</span></div>
-                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.firstName} ${params.lastName || ''}</span></div>
+                    <div><span class="param-name">姓名:</span> <span class="param-value">${params.first_name} ${params.last_name || ''}</span></div>
                     <div><span class="param-name">语言:</span> <span class="param-value">${params.language || '未设置'}</span></div>
+                    <div><span class="param-name">聊天ID:</span> <span class="param-value">${params.chat_id || '未设置'}</span></div>
+                    <div><span class="param-name">是否机器人:</span> <span class="param-value">${params.is_bot === 'true' ? '是' : '否'}</span></div>
+                    <div><span class="param-name">是否高级用户:</span> <span class="param-value">${params.is_premium === 'true' ? '是' : '否'}</span></div>
                 </div>
             </div>
         `;
