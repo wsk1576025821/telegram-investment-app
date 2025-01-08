@@ -1,0 +1,9 @@
+@echo off
+echo Setting up environment...
+set TELEGRAM_BOT_TOKEN=7582221284:AAGvtmNC5RmjSRcumethqzgWPkSTJRYHxQg
+
+echo Stopping existing bot...
+taskkill /F /IM python.exe /FI "WINDOWTITLE eq bot.py" 2>NUL
+
+echo Starting bot...
+python bot.py > bot.log 2>&1 

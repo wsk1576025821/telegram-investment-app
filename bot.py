@@ -11,10 +11,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 从环境变量获取 TOKEN
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-if not TOKEN:
-    raise ValueError("No token found! Set your TELEGRAM_BOT_TOKEN environment variable.")
+# 从环境变量获取 TOKEN，如果没有则使用默认值
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '7582221284:AAGvtmNC5RmjSRcumethqzgWPkSTJRYHxQg')
+
+# 验证 TOKEN 是否有效
+if not TOKEN or len(TOKEN.split(':')) != 2:
+    raise ValueError("Invalid token! Please check your TELEGRAM_BOT_TOKEN")
+
 # 管理员 ID
 ADMIN_ID = "7036647707"
 

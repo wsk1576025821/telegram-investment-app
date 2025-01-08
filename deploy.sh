@@ -5,6 +5,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# 设置 TOKEN
+export TELEGRAM_BOT_TOKEN="7582221284:AAGvtmNC5RmjSRcumethqzgWPkSTJRYHxQg"
+
 echo -e "${GREEN}开始部署流程...${NC}"
 
 # 1. Git 操作
