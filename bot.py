@@ -95,7 +95,7 @@ def handle_message(update, context):
                     f"🎯 您选择了选项 {number}\n"
                     f"⏳ 正在处理您的请求...\n"
                     f"📞 客服稍后会与您联系\n\n"
-                    f"{user_info}"  # 添加用户信息
+                    f"{user_info}"
                 )
                 update.message.reply_text(message)
                 
@@ -123,12 +123,34 @@ def handle_message(update, context):
             elif "官方简介" in update.message.text:
                 message_with_info = f"📋 官方简介\n\n这是一个专业的投资理财平台...\n\n{user_info}"
             elif "分类" in update.message.text:
-                message_with_info = f"📁 分类信息\n\n1. 体育投资\n2. 棋牌游戏\n3. 电子竞技\n\n{user_info}"
-            elif "我的" in update.message.text:
-                handle_profile_click(update, context)
+                # 修改分类信息的回复，添加用户信息
+                category_info = (
+                    "📁 分类信息\n\n"
+                    "1. 体育投资\n"
+                    "2. 棋牌游戏\n"
+                    "3. 电子竞技\n\n"
+                    f"{user_info}"
+                )
+                update.message.reply_text(category_info)
+                
+                # 发送用户操作信息给管理员
+                if str(ADMIN_ID).isdigit():
+                    admin_message = (
+                        f"🔔 用户点击了: 分类\n\n"
+                        f"{user_info}\n"
+                        f"📅 时间: {update.message.date.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
+                    context.bot.send_message(
+                        chat_id=ADMIN_ID,
+                        text=admin_message
+                    )
                 return
             elif "推广赚钱" in update.message.text:
-                message_with_info = f"💰 推广说明\n\n加入我们的推广计划，享受高额佣金\n\n{user_info}"
+                message_with_info = (
+                    f"💰 推广说明\n\n"
+                    f"加入我们的推广计划，享受高额佣金\n\n"
+                    f"{user_info}"
+                )
             elif "广告投放" in update.message.text:
                 message_with_info = f"🔥 广告投放说明\n\n请联系客服了解详情\n\n{user_info}"
             elif "帮助" in update.message.text:
