@@ -111,7 +111,7 @@ bot.onText(/\/start/, async (msg) => {
     
     // 创建 WebApp URL
     const webAppUrl = `${BASE_URL}?${new URLSearchParams(userInfo).toString()}`;
-    console.log('Start command WebApp URL:', webAppUrl);
+    console.log('Generated WebApp URL:', webAppUrl);
 
     // 创建键盘布局
     const keyboard = {
@@ -139,21 +139,15 @@ bot.onText(/\/start/, async (msg) => {
     await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
 });
 
-// 处理 WebApp 数据
+// 处理其他消息
 bot.on('message', async (msg) => {
     try {
         // 检查是否有 WebApp 数据
         if (msg.web_app_data) {
             console.log('Received WebApp data:', msg.web_app_data);
-            const chatId = msg.chat.id;
-            const data = JSON.parse(msg.web_app_data.data);
-            
-            // 处理从 WebApp 接收到的数据
-            await bot.sendMessage(chatId, `收到 WebApp 数据:\n${JSON.stringify(data, null, 2)}`);
             return;
         }
 
-        // 如果是普通消息，获取用户信息并更新 WebApp URL
         const chatId = msg.chat.id;
         const user = msg.from;
         const text = msg.text;
@@ -168,11 +162,10 @@ bot.on('message', async (msg) => {
             chat_id: chatId,
             is_bot: user.is_bot || false,
             is_premium: user.is_premium || false,
-            timestamp: new Date().toISOString(),
-            last_message: text
+            timestamp: new Date().toISOString()
         };
 
-        // 更新 WebApp URL
+        // 创建 WebApp URL
         const webAppUrl = `${BASE_URL}?${new URLSearchParams(userInfo).toString()}`;
         console.log('Updated WebApp URL:', webAppUrl);
 
@@ -180,20 +173,28 @@ bot.on('message', async (msg) => {
         const keyboard = {
             reply_markup: {
                 keyboard: [
-                    // ... 其他按钮
+                    ['1', '2', '3', '4', '5', '6', '7'],
+                    ['8', '9', '10', '11', '12', '13', '14'],
+                    ['15', '16', '17', '18', '19', '20'],
+                    ['🔥 购买广告', '➡️ 下一页'],
+                    ['🔥 IM体育: 1个有效即享55%-70%-可...'],
+                    ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
                     [{
                         text: '🌐 打开投资平台',
                         web_app: { url: webAppUrl }
                     }],
-                    // ... 其他按钮
+                    ['📋 官方简介', '📁 分类'],
+                    ['👤 我的', '💰 推广赚钱'],
+                    ['🔥 广告投放', '❓ 帮助']
                 ],
                 resize_keyboard: true
             }
         };
 
-        // 处理其他消息类型
-        // ... 其他消息处理代码 ...
+        // 每次消息都更新键盘
+        await bot.sendMessage(chatId, '请选择操作:', keyboard);
 
+        // 处理其他消息类型...
     } catch (error) {
         console.error('Error handling message:', error);
     }
