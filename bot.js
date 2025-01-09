@@ -31,31 +31,35 @@ const BASE_URL = "https://wsk1576025821.github.io/telegram-investment-app";
 
 // 创建键盘布局
 const getKeyboard = (webAppUrl) => {
-    // 打印 URL 用于调试
-    console.log('Creating keyboard with WebApp URL:', webAppUrl);
+    console.log("Creating keyboard with WebApp URL:", webAppUrl);
     
     return {
         reply_markup: {
+            menu_button: {
+                text: "打开",
+                web_app: {
+                    url: webAppUrl
+                }
+            },
             keyboard: [
                 ['1', '2', '3', '4', '5', '6', '7'],
                 ['8', '9', '10', '11', '12', '13', '14'],
                 ['15', '16', '17', '18', '19', '20'],
-                ['🔥 购买广告', '➡️ 下一页'],
-                ['🔥 IM体育: 1个有效即享55%-70%-可...'],
-                ['🎭升元棋牌❤️ 贷盈利70%分成招商❤️...'],
+                ['📱 购买广告', '⬇️ 下一页'],
+                ['🔥 IMA体育: 1个有效创手55%-76%-可...'],
+                ['🔥手动挂单❤️ 资金利70%分成招商...'],
                 [{
                     text: '🌐 打开投资平台',
-                    web_app: { 
+                    web_app: {
                         url: webAppUrl,
-                        // 添加更多 WebApp 配置
                         parse_mode: 'HTML',
                         disable_web_page_preview: false,
                         protect_content: false
                     }
                 }],
-                ['📋 官方简介', '📁 分类'],
-                ['👤 我的', '💰 推广赚钱'],
-                ['🔥 广告投放', '❓ 帮助']
+                ['📋 官方简介', '💳 分类'],
+                ['👨‍💼 我的', '🔰 推广赚钱'],
+                ['📱 广告投放', '❓ 帮助']
             ],
             resize_keyboard: true,
             one_time_keyboard: false
