@@ -231,4 +231,35 @@ process.on('SIGINT', () => {
     });
 });
 
+// 在 bot 初始化后添加这个函数
+async function setupBot() {
+    try {
+        // 设置 menu button
+        await bot.setMyCommands([
+            {
+                command: 'start',
+                description: '启动机器人'
+            }
+        ]);
+        
+        // 设置 menu button 需要通过 API 请求
+        await bot.api.setChatMenuButton({
+            menu_button: {
+                type: 'web_app',
+                text: '打开',
+                web_app: {
+                    url: BASE_URL
+                }
+            }
+        });
+        
+        console.log('Bot menu button setup completed');
+    } catch (error) {
+        console.error('Error setting up bot:', error);
+    }
+}
+
+// 在创建 bot 实例后调用
+setupBot();
+
 console.log('Bot is running...'); 
