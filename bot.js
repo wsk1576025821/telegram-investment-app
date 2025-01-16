@@ -213,30 +213,30 @@ bot.onText(/\/start/, async (msg) => {
     await bot.sendMessage(chatId, '请选择以下操作：', keyboard);
 });
 
-// 添加定时发送功能
-function schedulePromotionalMessage() {
-    // 每天固定时间发送
-    const schedule = require('node-schedule');
-    
-    // 每天早上10点发送
-    schedule.scheduleJob('0 10 * * *', async () => {
+// 存储用户 chatId 的数组
+const targetChatIds = [
+    "chatId1",
+    "chatId2",
+    // ... 添加更多 chatId
+];
+
+function startAutoMessage() {
+    setInterval(async () => {
         try {
-            // 从数据库或配置中获取用户列表
-            const users = [/* 您的用户列表 */];
-            
-            for (const user of users) {
-                await sendPromotionalMessage(user.chatId);
-                // 添加延迟避免触发限制
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            // 遍历所有目标用户
+            for (const chatId of targetChatIds) {
+                await bot.sendMessage(/* ... */);
+                // 添加短暂延迟避免触发限制
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
         } catch (error) {
-            console.error('Error in scheduled message:', error);
+            console.error('Error:', error);
         }
-    });
+    }, 30000);
 }
 
-// 启动定时任务
-schedulePromotionalMessage();
+// 在 bot 启动时开始自动发送
+startAutoMessage();
 
 // 处理其他消息
 bot.on('message', async (msg) => {
