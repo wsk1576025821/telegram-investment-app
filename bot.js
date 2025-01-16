@@ -131,7 +131,59 @@ const createWebAppUrl = (userInfo) => {
     return finalUrl;
 };
 
-// 处理 /start 命令
+// 添加发送带图片和按钮的消息函数
+async function sendPromotionalMessage(chatId) {
+    try {
+        // 构建用户参数
+        const params = new URLSearchParams({
+            source: 'promo',
+            timestamp: new Date().toISOString()
+        });
+
+        const webAppUrl = `${BASE_URL}?${params.toString()}`;
+        
+        // 创建内联键盘按钮
+        const inlineKeyboard = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{
+                        text: '🌟 立即投资',
+                        web_app: {
+                            url: webAppUrl
+                        }
+                    }],
+                    [{
+                        text: '📱 分享给朋友',
+                        url: `https://t.me/share/url?url=${encodeURIComponent(webAppUrl)}`
+                    }]
+                ]
+            },
+            parse_mode: 'HTML'
+        };
+
+        // 发送图片消息
+        await bot.sendPhoto(chatId, 
+            'path/to/your/promo/image.jpg', // 替换为您的图片路径或URL
+            {
+                caption: `
+🔥 <b>投资平台最新优惠</b>
+
+💰 高收益投资项目
+✨ 专业团队管理
+🔒 资金安全保障
+                
+<i>点击下方按钮立即开始！</i>`,
+                parse_mode: 'HTML',
+                ...inlineKeyboard
+            }
+        );
+
+    } catch (error) {
+        console.error('Error sending promotional message:', error);
+    }
+}
+
+// 修改 /start 命令处理
 bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const user = msg.from;
@@ -149,16 +201,42 @@ bot.onText(/\/start/, async (msg) => {
         timestamp: new Date().toISOString()
     };
     
-    console.log('User info from Telegram:', user);
-    console.log('Processed user info:', userInfo);
+    // 发送欢迎消息
+    await bot.sendMessage(chatId, '欢迎使用投资平台！');
     
-    // 使用新的 URL 生成函数
+    // 发送推广消息
+    await sendPromotionalMessage(chatId);
+    
+    // 使用现有的键盘布局
     const webAppUrl = createWebAppUrl(userInfo);
-    
-    // 创建键盘布局
     const keyboard = getKeyboard(webAppUrl);
-    await bot.sendMessage(chatId, '欢迎使用投资平台！请点击下方按钮操作。', keyboard);
+    await bot.sendMessage(chatId, '请选择以下操作：', keyboard);
 });
+
+// 添加定时发送功能
+function schedulePromotionalMessage() {
+    // 每天固定时间发送
+    const schedule = require('node-schedule');
+    
+    // 每天早上10点发送
+    schedule.scheduleJob('0 10 * * *', async () => {
+        try {
+            // 从数据库或配置中获取用户列表
+            const users = [/* 您的用户列表 */];
+            
+            for (const user of users) {
+                await sendPromotionalMessage(user.chatId);
+                // 添加延迟避免触发限制
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        } catch (error) {
+            console.error('Error in scheduled message:', error);
+        }
+    });
+}
+
+// 启动定时任务
+schedulePromotionalMessage();
 
 // 处理其他消息
 bot.on('message', async (msg) => {
