@@ -27,7 +27,7 @@ const botOptions = {
 const bot = new TelegramBot(token, botOptions);
 
 // 基础 URL
-const BASE_URL = "https://wsk1576025821.github.io/telegram-investment-app";
+const BASE_URL = encodeURI("https://nuxt-activity-dev.dx252.com//venue?id=zr&i-code=4024534");
 
 // 创建键盘布局
 const getKeyboard = (webAppUrl) => {
@@ -35,12 +35,6 @@ const getKeyboard = (webAppUrl) => {
     
     return {
         reply_markup: {
-            menu_button: {
-                text: "打开",
-                web_app: {
-                    url: webAppUrl
-                }
-            },
             keyboard: [
                 ['1', '2', '3', '4', '5', '6', '7'],
                 ['8', '9', '10', '11', '12', '13', '14'],
@@ -51,10 +45,7 @@ const getKeyboard = (webAppUrl) => {
                 [{
                     text: '🌐 打开投资平台',
                     web_app: {
-                        url: webAppUrl,
-                        parse_mode: 'HTML',
-                        disable_web_page_preview: false,
-                        protect_content: false
+                        url: webAppUrl
                     }
                 }],
                 ['📋 官方简介', '💳 分类'],
@@ -103,32 +94,26 @@ process.on('exit', () => {
 
 // 创建 WebApp URL
 const createWebAppUrl = (userInfo) => {
-    const baseUrl = "https://wsk1576025821.github.io/telegram-investment-app/";
     const params = new URLSearchParams();
     
-    // 确保所有参数都有值且正确编码
+    // 确保所有参数都经过正确编码
     const safeUserInfo = {
         user_id: userInfo.user_id || '',
-        username: userInfo.username || 'anonymous',
-        first_name: userInfo.first_name || '',
-        last_name: userInfo.last_name || '',
+        username: encodeURIComponent(userInfo.username || 'anonymous'),
+        first_name: encodeURIComponent(userInfo.first_name || ''),
+        last_name: encodeURIComponent(userInfo.last_name || ''),
         language: userInfo.language || 'zh',
         chat_id: userInfo.chat_id || '',
         is_bot: String(userInfo.is_bot || false),
         is_premium: String(userInfo.is_premium || false),
-        timestamp: userInfo.timestamp || new Date().toISOString()
+        timestamp: encodeURIComponent(userInfo.timestamp || new Date().toISOString())
     };
     
-    // 添加参数前打印调试信息
-    console.log('Creating URL with user info:', safeUserInfo);
-    
     Object.entries(safeUserInfo).forEach(([key, value]) => {
-        params.append(key, encodeURIComponent(value || ''));
+        params.append(key, value);
     });
     
-    const finalUrl = `${baseUrl}?${params.toString()}`;
-    console.log('Final WebApp URL:', finalUrl);
-    return finalUrl;
+    return `${BASE_URL}?${params.toString()}`;
 };
 
 // 添加发送带图片和按钮的消息函数
@@ -183,60 +168,160 @@ async function sendPromotionalMessage(chatId) {
     }
 }
 
-// 修改 /start 命令处理
-bot.onText(/\/start/, async (msg) => {
-    const chatId = msg.chat.id;
-    const user = msg.from;
-    
-    // 构建用户信息
-    const userInfo = {
-        user_id: String(user.id),
-        username: user.username || 'anonymous',
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        language: user.language_code || 'zh',
-        chat_id: String(chatId),
-        is_bot: String(user.is_bot || false),
-        is_premium: String(user.is_premium || false),
-        timestamp: new Date().toISOString()
-    };
-    
-    // 发送欢迎消息
-    await bot.sendMessage(chatId, '欢迎使用投资平台！');
-    
-    // 发送推广消息
-    await sendPromotionalMessage(chatId);
-    
-    // 使用现有的键盘布局
-    const webAppUrl = createWebAppUrl(userInfo);
-    const keyboard = getKeyboard(webAppUrl);
-    await bot.sendMessage(chatId, '请选择以下操作：', keyboard);
-});
+// 添加发送视频消息的函数
+async function sendVideoMessage(chatId) {
+    try {
+        // 构建带参数的 URL
+        const params = new URLSearchParams({
+            source: 'video_promo',
+            timestamp: new Date().toISOString()
+        });
+        const webAppUrl = `${BASE_URL}?${params.toString()}`;
 
-// 存储用户 chatId 的数组
-const targetChatIds = [
-    "chatId1",
-    "chatId2",
-    // ... 添加更多 chatId
-];
+        // 创建内联键盘按钮
+        const messageOptions = {
+            caption: `
+🎉 恭喜老板爆奖了
+🌟 祝您一路长虹
 
+🔥🔥 恭喜玩家 展名大佬在 德信飞投 真得 1001000 USDT！🔥🔥
+🎯💕 欢迎再进，一路长红❤️，再接再厉 🎯`,
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: '💎 德信飞投 💎',
+                            web_app: {
+                                url: webAppUrl
+                            }
+                        }
+                    ],
+                    [
+                        {
+                            text: '🎮 3D捕鱼',
+                            callback_data: 'game_fish'
+                        },
+                        {
+                            text: '🎲 电子游戏',
+                            callback_data: 'game_slot'
+                        }
+                    ],
+                    [
+                        {
+                            text: '🎯 香港六合彩',
+                            callback_data: 'lottery_hk'
+                        },
+                        {
+                            text: '🍁 加拿大28',
+                            callback_data: 'lottery_ca'
+                        }
+                    ]
+                ]
+            }
+        };
+
+        // 发送视频消息
+        await bot.sendVideo(
+            chatId,
+            'path/to/your/promo.mp4', // 替换为您的视频文件路径
+            messageOptions
+        );
+
+        console.log('视频消息发送成功，时间:', new Date().toLocaleString());
+    } catch (error) {
+        console.error('发送视频消息失败:', error);
+    }
+}
+
+// 修改定时发送函数
 function startAutoMessage() {
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    
+    if (!chatId) {
+        console.error('未设置 TELEGRAM_CHAT_ID');
+        return;
+    }
+
+    console.log('开始自动发送消息服务，目标chatId:', chatId);
+
+    // 修改为每5分钟发送一次
     setInterval(async () => {
         try {
-            // 遍历所有目标用户
-            for (const chatId of targetChatIds) {
-                await bot.sendMessage(/* ... */);
-                // 添加短暂延迟避免触发限制
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
+            // 构建消息URL
+            const params = new URLSearchParams({
+                source: 'auto',
+                timestamp: encodeURIComponent(new Date().toISOString())
+            });
+
+            const webAppUrl = `${BASE_URL}?${params.toString()}`;
+            
+            // 创建内联键盘按钮
+            const messageOptions = {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{
+                            text: '💎 德信飞投 💎',
+                            web_app: {
+                                url: webAppUrl
+                            }
+                        }],
+                        [{
+                            text: '🎮 3D捕鱼',
+                            callback_data: 'game_fish'
+                        },
+                        {
+                            text: '🎲 电子游戏',
+                            callback_data: 'game_slot'
+                        }],
+                        [{
+                            text: '🎯 香港六合彩',
+                            callback_data: 'lottery_hk'
+                        },
+                        {
+                            text: '🍁 加拿大28',
+                            callback_data: 'lottery_ca'
+                        }]
+                    ]
+                }
+            };
+
+            // 发送消息
+            await bot.sendMessage(
+                chatId,
+                `
+🎉 恭喜老板爆奖了
+🌟 祝您一路长虹
+
+🔥🔥 恭喜玩家 展名大佬在 德信飞投 真得 1001000 USDT！🔥🔥
+🎯💕 欢迎再进，一路长红❤️，再接再厉 🎯`,
+                messageOptions
+            );
+
+            console.log('自动消息发送成功，时间:', new Date().toLocaleString());
+
         } catch (error) {
-            console.error('Error:', error);
+            console.error('发送自动消息失败:', error);
         }
-    }, 30000);
+    }, 300000); // 300000ms = 5分钟
 }
 
 // 在 bot 启动时开始自动发送
-startAutoMessage();
+bot.on('polling_error', (error) => {
+    console.error('Polling error:', error);
+});
+
+// 确保 bot 成功启动后再开始发送消息
+bot.getMe().then((botInfo) => {
+    console.log('Bot 启动成功:', botInfo.username);
+    setupBot().then(() => {
+        startAutoMessage();  // 在 setupBot 完成后开始自动发送消息
+        console.log('自动发送消息服务已启动');
+    });
+}).catch((error) => {
+    console.error('Bot 启动失败:', error);
+});
 
 // 处理其他消息
 bot.on('message', async (msg) => {
@@ -312,7 +397,7 @@ process.on('SIGINT', () => {
 // 在 bot 初始化后添加这个函数
 async function setupBot() {
     try {
-        // 设置 menu button
+        // 只设置命令列表
         await bot.setMyCommands([
             {
                 command: 'start',
@@ -320,24 +405,72 @@ async function setupBot() {
             }
         ]);
         
-        // 设置 menu button 需要通过 API 请求
-        await bot.api.setChatMenuButton({
-            menu_button: {
-                type: 'web_app',
-                text: '打开',
-                web_app: {
-                    url: BASE_URL
-                }
-            }
-        });
-        
-        console.log('Bot menu button setup completed');
+        console.log('Bot commands setup completed');
     } catch (error) {
         console.error('Error setting up bot:', error);
     }
 }
 
-// 在创建 bot 实例后调用
-setupBot();
+// 处理按钮回调
+bot.on('callback_query', async (callbackQuery) => {
+    const chatId = callbackQuery.message.chat.id;
+    const data = callbackQuery.data;
 
-console.log('Bot is running...'); 
+    try {
+        // 根据不同按钮处理不同逻辑
+        switch (data) {
+            case 'game_fish':
+                await sendGameInfo(chatId, '3D捕鱼');
+                break;
+            case 'game_slot':
+                await sendGameInfo(chatId, '电子游戏');
+                break;
+            case 'lottery_hk':
+                await sendGameInfo(chatId, '香港六合彩');
+                break;
+            case 'lottery_ca':
+                await sendGameInfo(chatId, '加拿大28');
+                break;
+        }
+    } catch (error) {
+        console.error('处理按钮回调失败:', error);
+    }
+});
+
+// 发送游戏信息
+async function sendGameInfo(chatId, gameName) {
+    const params = new URLSearchParams({
+        game: gameName,
+        source: 'button_click',
+        timestamp: new Date().toISOString()
+    });
+
+    const webAppUrl = `${BASE_URL}?${params.toString()}`;
+
+    const messageOptions = {
+        parse_mode: 'HTML',
+        reply_markup: {
+            inline_keyboard: [
+                [{
+                    text: `🎮 进入${gameName}`,
+                    web_app: {
+                        url: webAppUrl
+                    }
+                }]
+            ]
+        }
+    };
+
+    await bot.sendMessage(
+        chatId,
+        `
+🎯 <b>${gameName}</b>
+
+💫 热门游戏推荐
+🎁 新人福利优惠
+💰 上分无需等待
+
+<i>点击下方按钮立即开始！</i>`,
+        messageOptions
+    );
+}

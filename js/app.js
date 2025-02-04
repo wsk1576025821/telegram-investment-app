@@ -436,3 +436,23 @@ if (window.Telegram?.WebApp) {
 
 // 3. 在 URL 发生变化时
 window.addEventListener('popstate', checkWebAppUrl); 
+
+// 获取并显示 URL 参数
+function displayUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramsContainer = document.getElementById('params-container');
+    
+    if (paramsContainer) {
+        let paramsHtml = '<h3>URL 参数:</h3><ul>';
+        
+        urlParams.forEach((value, key) => {
+            paramsHtml += `<li><strong>${key}:</strong> ${value}</li>`;
+        });
+        
+        paramsHtml += '</ul>';
+        paramsContainer.innerHTML = paramsHtml;
+    }
+}
+
+// 页面加载时显示参数
+document.addEventListener('DOMContentLoaded', displayUrlParams); 
