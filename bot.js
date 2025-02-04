@@ -27,7 +27,7 @@ const botOptions = {
 const bot = new TelegramBot(token, botOptions);
 
 // 基础 URL
-const BASE_URL = encodeURI("https://nuxt-activity-dev.dx252.com//venue?id=zr&i-code=4024534");
+const BASE_URL = encodeURI("https://nuxt-activity-dev.dx252.com//venue?id=zr&i-code=9079519");
 
 // 创建键盘布局
 const getKeyboard = (webAppUrl) => {
@@ -236,16 +236,16 @@ async function sendVideoMessage(chatId) {
 
 // 修改定时发送函数
 function startAutoMessage() {
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+    const chatId = adminId; // 使用 adminId 而不是环境变量
     
     if (!chatId) {
-        console.error('未设置 TELEGRAM_CHAT_ID');
+        console.error('未设置 adminId');
         return;
     }
 
     console.log('开始自动发送消息服务，目标chatId:', chatId);
 
-    // 修改为每5分钟发送一次
+    // 修改为每30秒发送一次
     setInterval(async () => {
         try {
             // 构建消息URL
@@ -304,7 +304,7 @@ function startAutoMessage() {
         } catch (error) {
             console.error('发送自动消息失败:', error);
         }
-    }, 300000); // 300000ms = 5分钟
+    }, 30000); // 30000ms = 30秒
 }
 
 // 在 bot 启动时开始自动发送
@@ -315,10 +315,8 @@ bot.on('polling_error', (error) => {
 // 确保 bot 成功启动后再开始发送消息
 bot.getMe().then((botInfo) => {
     console.log('Bot 启动成功:', botInfo.username);
-    setupBot().then(() => {
-        startAutoMessage();  // 在 setupBot 完成后开始自动发送消息
-        console.log('自动发送消息服务已启动');
-    });
+    startAutoMessage();  // 直接启动自动发送消息
+    console.log('自动发送消息服务已启动');
 }).catch((error) => {
     console.error('Bot 启动失败:', error);
 });
